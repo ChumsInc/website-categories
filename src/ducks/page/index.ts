@@ -1,49 +1,69 @@
 import {AnyAction, combineReducers} from "redux";
 import {RootStateOrAny} from "react-redux";
+import {RootState} from "../index";
 
+export const addPageSet = 'page/addPageSet';
 export const currentPageChanged = 'page/currentPageChanged';
 export const rowsPerPageChanged = 'page/rowsPerPageChanged';
 
-export interface PageAction extends AnyAction {
-    payload: number,
-    meta: string,
+export interface PageSetAction {
+    key: string,
+    current?: number,
+    rowsPerPage?: number,
 }
 
-export const setPage = (page: number, root:string = 'app'): PageAction => ({type: `${root}/${currentPageChanged}`, payload: page, meta: root});
-export const setRowsPerPage = (rowsPerPage: number, root:string = 'app'): PageAction => ({type: `${root}/${rowsPerPageChanged}`, payload: rowsPerPage, meta: root});
+export interface PageAction extends AnyAction {
+    payload: PageSetAction
+}
 
-export interface PageState {
+export const setPageAction = ({current, key = 'app'}:PageSetAction): PageAction => ({type: currentPageChanged, payload: {key, current}});
+export const setRowsPerPageAction = ({rowsPerPage, key = 'app'}:PageSetAction): PageAction => ({type: rowsPerPageChanged, payload: {key, rowsPerPage}});
+export const addPageSetAction = ({key = 'app', current = 1, rowsPerPage = 25}:PageSetAction): PageAction => ({type: addPageSet, payload: {key, current, rowsPerPage}});
+
+export interface KeyedPageState {
     current: number,
     rowsPerPage: number,
 }
+export interface PageState {
+    [key:string] : KeyedPageState
+}
 
-export const selectCurrentPage = (state: RootStateOrAny): number => state.page.current;
-export const selectRowsPerPage = (state: RootStateOrAny): number => state.page.rowsPerPage;
+export const currentPageSelector = (key:string) => (state: RootState): number => state.page[key]?.current ?? 1;
+export const rowsPerPageSelector = (key:string) => (state: RootState): number => state.page[key]?.rowsPerPage ?? 25;
+export const pagedDataSelector = (key: string, data: any[]) => (state:RootState):any[] => {
+    const {current, rowsPerPage} = state.page[key] || {};
+    return data.filter((row, index) => Math.ceil((index + 1) / rowsPerPage) === current);
+}
 
-const currentReducer = (state = 1, action: PageAction): number => {
-    const {type, payload, meta} = action;
+const pageReducer = (state:PageState = {}, action: PageAction):PageState => {
+    const {type, payload} = action;
+    const {key = 'app', current = 1, rowsPerPage = 25} = payload || {};
     switch (type) {
-    case `${meta}/${currentPageChanged}`:
-        return payload || 1;
-    case `${meta}/${rowsPerPageChanged}`:
-        return 1;
-    default:
+    case currentPageChanged:
+        if (state[key]) {
+            const {rowsPerPage} = state[key];
+            return {
+                ...state,
+                [key]: {current, rowsPerPage}
+            }
+        }
         return state;
+    case rowsPerPageChanged:
+        if (state[key]) {
+            const {current} = state[key];
+            return {
+                ...state,
+                [key]: {current, rowsPerPage}
+            }
+        }
+        return state;
+    case addPageSet:
+        return {
+            ...state,
+            [key]: {current, rowsPerPage},
+        }
+    default: return state;
     }
 }
 
-const rowsPerPageReducer = (state = 25, action: PageAction): number => {
-    const {type, payload, meta} = action;
-    switch (type) {
-    case `${meta}/${rowsPerPageChanged}`:
-        return payload;
-    default:
-        return state;
-    }
-}
-
-
-export default combineReducers({
-    current: currentReducer,
-    rowsPerPage: rowsPerPageReducer,
-});
+export default pageReducer

@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 import AlertList from "./ducks/alerts/AlertList";
 import CategoryList from "./ducks/categories/CategoryList";
-import CategoryEditor from "./components/CategoryEditor";
+import CategoryEditor from "./ducks/categories/CategoryEditor";
 import CategoryItems from "./components/CategoryItems";
 import Tabs from "./components/Tabs";
 import {TAB_LIST, TABS} from "./constants";

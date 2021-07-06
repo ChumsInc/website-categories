@@ -1,6 +1,6 @@
 import React from 'react';
 import Modal from "./Modal";
-import {Controlled as CodeMirror} from "react-codemirror2";
+// import {Controlled as CodeMirror} from "react-codemirror2";
 
 
 require('codemirror/lib/codemirror.css');
@@ -15,8 +15,8 @@ const ModalEditor = ({field, value, onChange, onClose}) => {
     };
 
     return (<Modal onClose={(ev) => onClose(ev)} size="lg" title={title}>
-        <CodeMirror value={value} onBeforeChange={handleChange}
-                    options={{lineNumbers: true, lineWrapping: true}}/>
+        {/*<CodeMirror value={value} onBeforeChange={handleChange}*/}
+        {/*            options={{lineNumbers: true, lineWrapping: true}}/>*/}
     </Modal>)
 };
 

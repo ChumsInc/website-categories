@@ -1,52 +1,65 @@
-import React, {Component, useEffect, useState} from 'react';
-import PropTypes from 'prop-types';
-import {connect, useDispatch, useSelector} from 'react-redux';
+import React, {useEffect} from 'react';
+import {useDispatch, useSelector} from 'react-redux';
 import CategoryListFilter from "./CategoryListFilter";
-import SortableTable from "../../components/SortableTable";
-import {fetchCategories, selectCategory} from '../../actions';
 import ProgressBar from "../../components/ProgressBar";
-import {Category} from "../types";
-import {loadingSelector} from "./index";
-import {filteredListSelector} from "./index";
-import SortableTableHead from "../../common-components/SortableTableHead";
-import {SortableTableField} from "../../common-components/SortableTH";
+import {
+    filteredListSelector, filterSelector,
+    listSelector,
+    loadingSelector,
+    pagedFilteredListSelector,
+    selectedCategorySelector
+} from "./index";
+import {SortableTableField} from "../sortableTables/SortableTH";
 import {sortableTableSelector, tableAddedAction, sortChangedAction} from "../sortableTables";
+import {loadCategories, selectCategoryAction} from "./actions";
+import {addPageSetAction, pagedDataSelector} from "../page";
+import ConnectedPager from "../page/ConnectedPager";
+import SortableTable from "../sortableTables/SortableTable";
+import {Category} from "../types";
 
-const Title:React.FC<{title:string}> = ({title}) => (<span dangerouslySetInnerHTML={{__html: title}}/>)
+const Title: React.FC<{ title: string }> = ({title}) => (<span dangerouslySetInnerHTML={{__html: title}}/>)
 
 const TABLE = 'categories';
 
-const fields:SortableTableField[] = [
+const fields: SortableTableField[] = [
     {field: 'id', title: 'ID', sortable: true},
     {field: 'keyword', title: 'Keyword', sortable: true},
-    {field: 'title', title: 'Name', sortable: true, render: ({title}:{title:string}) => <Title title={title} />},
+    {field: 'title', title: 'Name', sortable: true, render: ({title}: { title: string }) => <Title title={title}/>},
     {field: 'parentId', title: 'Parent', sortable: true},
     {field: 'changefreq', title: 'Change Freq.', sortable: true}
 ];
 
-const CategoryList:React.FC = () => {
+const rowClassName = ({status}:Category) => ({'table-warning': status === 0})
+
+const CategoryList: React.FC = () => {
     const dispatch = useDispatch();
     useEffect(() => {
+        dispatch(addPageSetAction({key: TABLE}));
         dispatch(tableAddedAction({key: TABLE, field: 'keyword', ascending: true}));
+        dispatch(loadCategories());
     }, []);
     const sort = useSelector(sortableTableSelector(TABLE))
     const loading = useSelector(loadingSelector);
-    const list = useSelector(filteredListSelector);
+    const list = useSelector(filteredListSelector(sort));
+    const pagedList = useSelector(pagedDataSelector(TABLE, list));
+    const selected = useSelector(selectedCategorySelector);
+    const onSelectCategory = (cat: Category) => dispatch(selectCategoryAction(cat));
+    const filter = useSelector(filterSelector);
 
-    const sortChangeHandler = (field: string, ascending: boolean) => {
-        dispatch(sortChangedAction({key: TABLE, field, ascending}));
-    }
 
     return (
         <div>
-            <CategoryListFilter />
+            <CategoryListFilter/>
             {loading && <ProgressBar striped={true} className="mt-1"/>}
+
             <div className="table-responsive-sm mt-3">
-                <table className="table table-xs table-sticky">
-                    <SortableTableHead fields={fields} onChangeSort={sortChangeHandler} sortField={sort.field} sortAsc={sort.ascending}  />
-                </table>
+                <SortableTable tableKey={TABLE} keyField="keyword" fields={fields} data={pagedList}
+                               rowClassName={rowClassName}
+                               selected={selected.keyword} onSelectRow={onSelectCategory}/>
             </div>
+            <ConnectedPager pageKey={TABLE} dataLength={list.length} filtered={!!filter}/>
         </div>
     )
 }
 
+export default CategoryList;

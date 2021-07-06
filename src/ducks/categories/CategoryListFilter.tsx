@@ -9,12 +9,13 @@ import {setFilter, loadCategories, toggleShowInactive} from "./actions";
 const CategoryListFilter: React.FC = () => {
     const dispatch = useDispatch();
 
-    const list = useSelector(filteredListSelector);
     const filter = useSelector(filterSelector);
     const showInactive = useSelector(showInactiveSelector);
     const onChangeFilter = (ev: ChangeEvent<HTMLInputElement>) => {
+        console.log(ev);
         dispatch(setFilter(ev.target.value));
     }
+
     return (
         <div className="row g-3">
             <label className="col-auto form-label">Site</label>
@@ -26,7 +27,7 @@ const CategoryListFilter: React.FC = () => {
                            onClick={() => dispatch(toggleShowInactive())} type="checkbox"/>
             </div>
             <div className="col-auto">
-                <Input value={filter || ''} onChange={onChangeFilter}/>
+                <Input value={filter || ''} onChange={onChangeFilter} wait={350} type="search" placeholder="Filter Categories"/>
             </div>
             <div className="col-auto">
                 <button type="button" className="btn btn-sm btn-primary"

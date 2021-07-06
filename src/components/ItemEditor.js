@@ -9,7 +9,7 @@ import Button from "./Button";
 import FormGroup from "./FormGroup";
 import FormGroupTextInput from "./FormGroupTextInput";
 import ProductSelect from "./ProductSelect";
-import CategorySelect from "./CategorySelect";
+import CategorySelect from "../ducks/categories/CategorySelect";
 import ControlledTextArea from "./ControlledTextArea";
 import {calcParentIds, parseImageFilename} from "../utils";
 import Alert from "../common-components/Alert";

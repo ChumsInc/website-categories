@@ -6,6 +6,7 @@ export interface SortableTableField {
     title: string,
     sortable: boolean,
     render?: (row:any) => ReactElement|Element|string,
+    className?: string|object|((any:any) => string|object),
 }
 
 export interface SortableTHProps {

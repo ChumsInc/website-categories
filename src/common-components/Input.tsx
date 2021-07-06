@@ -36,10 +36,13 @@ const Input: React.FC<InputProps> = ({
                                      }) => {
 
     let _debounced: ReturnType<typeof debounce> | undefined;
-    const delayedChange = useCallback(_debounced = debounce((ev: ChangeEvent<HTMLInputElement>) => onChange(ev), wait), []);
+    const delayedChange = useCallback(debounce((ev: ChangeEvent<HTMLInputElement>) => {
+        console.log('useCallback (debounced)', ev.target, ev.target.value)
+        onChange(ev)
+    }, wait), []);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    const [localValue, setLocalValue] = useState(String(value) || '');
+    const [localValue, setLocalValue] = useState(String(value || '') || '');
 
     useEffect(() => {
         return () => {
@@ -77,8 +80,9 @@ const Input: React.FC<InputProps> = ({
         <input type={type}
                className={classNames(inputClassName, className)}
                value={localValue || ''}
-               onInput={changeHandler}
+               // onInput={changeHandler}
                onBlur={blurHandler}
+               onChange={changeHandler}
                ref={myRef || inputRef} {...rest} />
     )
 }

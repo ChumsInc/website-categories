@@ -19,6 +19,23 @@ export interface Category {
     lifestyle?: string,
     css?: string,
     children: any,
+    changed?: boolean,
+}
+
+export const defaultCategory:Category = {
+    id: 0,
+    parentId: 0,
+    title: '',
+    keyword: '',
+    pageText: '',
+    descriptionMeta: '',
+    status: 0,
+    changefreq: 'monthly',
+    priority: 0,
+    timestamp: '',
+    lifestyle: '',
+    css: '',
+    children: [],
 }
 
 export interface Item {
@@ -63,4 +80,21 @@ export interface Keyword {
     formatted_name?: string,
     swatch_format?: string,
     css?: string,
+}
+
+export interface SortableTable {
+    key: string,
+    field: string,
+    ascending: boolean,
+}
+
+
+export interface SorterProps {
+    field: string,
+    ascending: boolean,
+}
+
+export interface InputField {
+    field: string,
+    value: string|number|boolean
 }

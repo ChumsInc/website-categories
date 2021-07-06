@@ -111,6 +111,7 @@ $item-link-color: bisque;
   }
 
   .btn-group {
+    background-color: green;
     &.item-types {
       .btn-secondary,
       .btn-outline-secondary:hover {
@@ -134,4 +135,3 @@ $item-link-color: bisque;
     }
   }
 }
-
