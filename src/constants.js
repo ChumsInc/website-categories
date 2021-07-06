@@ -37,7 +37,7 @@ export const CATEGORIES_ITEM_URL = '/node-:site/products/category/:parentId/item
 export const CATEGORY_SAVE_ITEM_URL = '/node-:site/products/category/item';
 export const CATEGORY_DELETE_ITEM_URL = '/node-:site/products/category/item/:id(\\d+)';
 export const CATEGORY_SAVE_SORT_URL = '/node-:site/products/category/:parentId(\\d+)/sort';
-export const PREVIEW_URL = 'https://:domain/:keyword';
+export const PREVIEW_URL = '//:domain/:keyword';
 
 export const NEW_CATEGORY = {
     id: 0,
