@@ -9,7 +9,9 @@
   "dependencies": {
     "@types/lodash.debounce": "^4.0.6",
     "@types/numeral": "^2.0.1",
+    "@types/validator": "^13.6.3",
     "ace-builds": "^1.4.12",
+    "chums-ducks": "github:UtahGooner/chums-ducks",
     "classnames": "^2.2.6",
     "codemirror": "^5.51.0",
     "css-loader": "^5.2.6",

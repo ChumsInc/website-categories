@@ -103,17 +103,10 @@ export const TAB_LIST = [
     {id: TABS.items, title: 'Items'},
 ];
 
-export const ITEM_TYPES = {
-    product: 'product',
-    category: 'category',
-    section: 'section',
-    link: 'link',
-    other: '',
-};
 
-export const PATH_PRODUCT_IMAGE = 'https://intranet.chums.com/images/products/400/:imagefile';
+export const PATH_PRODUCT_IMAGE = 'https://intranet.chums.com/images/products/400/:imageFile';
 export const PATH_LINK_IMAGE = 'https://intranet.chums.com/:imagefile';
-export const PATH_URL_OVERRIDE = 'https://:site';
+export const PATH_URL_OVERRIDE = 'https\\://:site';
 
 export const LOCAL_STORE_SITE = 'com.chums.intranet.categories:site';
 export const LOCAL_STORE_RPP = 'com.chums.intranet.categories:rpp';

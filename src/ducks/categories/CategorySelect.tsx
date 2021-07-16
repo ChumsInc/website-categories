@@ -1,6 +1,6 @@
 import React, {ChangeEvent} from 'react';
 import {useSelector} from 'react-redux';
-import Select from "../../common-components/Select";
+import {Select} from "chums-ducks/dist/components";
 import classNames from 'classnames';
 import {listSelector, categorySorter, selectedCategorySelector} from "./index";
 

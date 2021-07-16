@@ -196,14 +196,14 @@ const loadingItem = (state = false, action) => {
 };
 
 export default {
-    site,
-    tab,
-    categories,
-    keywords,
+    // site,
+    // tab,
+    // categories,
+    // keywords,
     category,
     items,
     item,
-    loading,
-    loadingCategory,
+    // loading,
+    // loadingCategory,
     loadingItem,
 };

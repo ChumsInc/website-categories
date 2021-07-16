@@ -1,37 +1,42 @@
-import {Action, combineReducers} from "redux";
-import {Category, defaultCategory, Keyword, SorterProps} from "../types";
+import {Action, AnyAction, combineReducers} from "redux";
+import {ActionInterface, Category, defaultCategory, Keyword, SorterProps} from "../types";
 import {ThunkAction} from "redux-thunk";
 import {RootState} from "../index";
-import {AlertAction} from "../alerts";
-import {sortableTableSelector} from "../sortableTables";
-import {pagedDataSelector} from "../page";
-import {calcChildIds} from "./utils";
+import {AlertAction, pagedDataSelector, sortableTableSelector} from "chums-ducks";
+import {calcChildIds, calcParentIds} from "./utils";
 
-export const showInactiveToggled = 'app:categories:showInactiveToggled';
-export const filterChanged = 'app:categories:filterChanged';
-export const categoriesLoading = 'app:categories:load-requested';
-export const categoriesLoadingSucceeded = 'app:categories:load-succeeded';
-export const categoriesLoadingFailed = 'app:categories:load-failed';
-export const sortChanged = 'app:categories:sortChanged';
-export const categorySelected = 'app:categories:categorySelected';
-export const categoryChanged = 'app:categories:selectedChanged';
+export const showInactiveToggled = 'categories/showInactiveToggled';
+export const categoryFilterChanged = 'categories/categoryFilterChanged';
+export const loadCategories = 'categories/load-requested';
+export const loadCategoriesSucceeded = 'categories/load-succeeded';
+export const loadCategoriesFailed = 'categories/load-failed';
+export const categorySortChanged = 'categories/categorySortChanged';
+export const categorySelected = 'categories/categorySelected';
+export const categoryChanged = 'categories/selectedChanged';
+export const saveCategory = 'categories/save-requested';
+export const saveCategorySucceeded = 'categories/save-succeeded';
+export const saveCategoryFailed = 'categories/save-failed';
+
 
 export type CategorySortField = 'id' | 'keyword' | 'title' | 'parentId' | 'changefreq';
 
-export interface CategoryAction extends Action {
-    payload: {
+export interface CategoryAction extends ActionInterface {
+    payload?: {
         list?: Category[],
         category?: Category,
         filter?: string,
         sort?: string,
         error?: Error,
+        change?: object
     }
 }
+
+export const defaultCategorySort:SorterProps = {field: 'keyword', ascending: true};
 
 export interface CategoryThunkAction extends ThunkAction<any, RootState, unknown, CategoryAction | AlertAction> {
 }
 
-export const categoriesURL = (site:string, id?:number) => {
+export const categoriesURL = (site:string) => {
     switch (site) {
     case 'safety': return '/node-safety/products/category/:id(\\d+)?';
     default: return '/api/b2b/products/category/:id(\\d+)?';
@@ -62,13 +67,20 @@ export const listSelector = (sort:SorterProps) => (state: RootState):Category[] 
 export const filteredListSelector = (sort: SorterProps) => (state: RootState):Category[] => {
     const {showInactive, filter, list} = state.categories;
     let filterRegex = /^/;
+    let filterIDRegex = /^/;
     try {
         filterRegex = new RegExp(filter);
+        filterIDRegex = new RegExp(`^${filter}$`)
     } catch (err) {
     }
 
     return list.filter(category => showInactive || !!category.status)
-        .filter(category => !filter || filterRegex.test(category.keyword) || filterRegex.test(category.title))
+        .filter(category => !filter
+            || filterRegex.test(category.keyword)
+            || filterRegex.test(category.title)
+            || filterIDRegex.test(String(category.id))
+            || filterIDRegex.test(String(category.parentId))
+        )
         .sort(categorySorter(sort));
 }
 
@@ -82,6 +94,8 @@ export const selectedCategorySelector = (state:RootState):Category => state.cate
 
 export const childCategoriesSelector = (state:RootState):number[] => calcChildIds(state.categories.list, state.categories.selected.id);
 
+export const disallowedParentsSelector = (state:RootState):number[] => calcParentIds(state.categories.list, state.categories.selected.id);
+
 const showInactiveReducer = (state: boolean = false, action: CategoryAction) => {
     switch (action.type) {
     case showInactiveToggled:
@@ -94,8 +108,8 @@ const showInactiveReducer = (state: boolean = false, action: CategoryAction) => 
 const filterReducer = (state: string = '', action: CategoryAction) => {
     const {type, payload} = action;
     switch (type) {
-    case filterChanged:
-        return payload.filter || '';
+    case categoryFilterChanged:
+        return payload?.filter || '';
     default:
         return state;
     }
@@ -103,10 +117,10 @@ const filterReducer = (state: string = '', action: CategoryAction) => {
 
 const loadingReducer = (state: boolean = false, action: CategoryAction) => {
     switch (action.type) {
-    case categoriesLoading:
+    case loadCategories:
         return true;
-    case categoriesLoadingSucceeded:
-    case categoriesLoadingFailed:
+    case loadCategoriesSucceeded:
+    case loadCategoriesFailed:
         return false;
     default:
         return state;
@@ -116,43 +130,39 @@ const loadingReducer = (state: boolean = false, action: CategoryAction) => {
 const listReducer = (state: Category[] = [], action: CategoryAction) => {
     const {type, payload} = action;
     switch (type) {
-    case categoriesLoadingSucceeded:
+    case loadCategoriesSucceeded:
+        if (!payload?.list && !!payload?.category) {
+            return [
+                ...state.filter(cat => cat.id !== payload?.category?.id),
+                {...payload?.category}
+            ].sort(categorySorter(defaultCategorySort))
+        }
         return [
-            ...(payload.list || []).sort(categorySorter({field: 'keyword', ascending: true}))
+            ...(payload?.list || []).sort(categorySorter(defaultCategorySort))
         ];
     default:
         return state;
     }
 }
 
-const sortReducer = (state: CategorySortField = 'keyword', action: CategoryAction) => {
-    const {type, payload} = action;
-    switch (type) {
-    case sortChanged:
-        return payload?.sort ?? 'keyword';
-    default:
-        return state;
-    }
-}
-
-const selectedReducer = (state: Category = {...defaultCategory}, action:CategoryAction) => {
+const selectedReducer = (state: Category = {...defaultCategory}, action:CategoryAction):Category => {
     const {type, payload} = action;
     switch (type) {
     case categorySelected:
-        if (!payload.category) {
+        if (!payload?.category) {
             return {...defaultCategory};
         }
-        return {...payload.category};
+        return {...payload?.category};
     case categoryChanged:
-        if (!payload.category) {
-            return {...defaultCategory};
+        return {...state, ...payload?.change, changed: true};
+    case loadCategoriesSucceeded:
+        if (payload?.category?.id === state.id) {
+            return payload?.category;
         }
-        return {...payload.category, changed: true};
-    case categoriesLoadingSucceeded:
-        if (state.keyword) {
-            const {keyword} = state;
-            const [category] = (payload.list || []).filter(cat => cat.keyword === keyword);
-            return category || {...defaultCategory};
+        return state;
+    case saveCategorySucceeded:
+        if (payload?.category) {
+            return {...payload?.category};
         }
         return state;
     default:
@@ -165,6 +175,5 @@ export default combineReducers({
     filter: filterReducer,
     loading: loadingReducer,
     list: listReducer,
-    sort: sortReducer,
     selected: selectedReducer,
 })

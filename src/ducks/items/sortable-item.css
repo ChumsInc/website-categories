@@ -1,0 +1,41 @@
+.sortable-item {
+  width: calc(20% - 0.5rem);
+  min-height: 150px;
+  flex: 0 0 auto;
+  border: 1px solid #1a1a1a;
+  border-radius: 3px;
+  padding: 0.5rem;
+  margin: 0.25rem;
+  text-align: center;
+  color: black;
+  font-size: small;
+}
+.sortable-item .btn-light {
+  border-color: grey;
+}
+.sortable-item.inactive {
+  color: grey;
+  background-color: gray;
+  border-color: red;
+}
+.sortable-item.inactive img {
+  filter: grayscale(50%) brightness(80%);
+}
+.sortable-item.inactive a {
+  color: gray;
+}
+.sortable-item.section {
+  background-color: lightcyan;
+  font-weight: bold;
+}
+.sortable-item.product {
+  background-color: lightblue;
+}
+.sortable-item.category {
+  background-color: #ffc966;
+}
+.sortable-item.link {
+  background-color: bisque;
+}
+
+/*# sourceMappingURL=sortable-item.css.map */

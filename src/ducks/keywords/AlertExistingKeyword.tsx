@@ -1,20 +1,24 @@
-import React, {Component} from 'react';
-import PropTypes, {string} from 'prop-types';
-import {connect, useSelector} from 'react-redux';
-import Alert from "../../common-components/Alert";
+import React from 'react';
+import {useSelector} from 'react-redux';
+import {Alert} from "chums-ducks/dist/ducks";
 import {keywordSelector} from "./index";
 
 export interface AlertExistingKeywordProps {
-    keyword: string
+    keyword: string,
+    id: number,
+    pageType: string,
 }
-const AlertExistingKeyword:React.FC<AlertExistingKeywordProps> = ({keyword}) => {
+const AlertExistingKeyword:React.FC<AlertExistingKeywordProps> = ({keyword, pageType, id}) => {
     const [existing] = useSelector(keywordSelector(keyword));
     if (!existing) {
         return null;
     }
+    if (existing.pagetype === pageType && existing.id === id) {
+        return null;
+    }
     return (
         <Alert color="warning" title="Warning">
-            '{existing.keyword}' already exists. (type: {existing.pagetype})
+            {existing.pagetype} '{existing.keyword}' already exists.
         </Alert>
     )
 }

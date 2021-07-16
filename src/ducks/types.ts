@@ -5,6 +5,8 @@ export interface ActionInterface {
     error?: boolean
 }
 
+export type ItemType = 'category'|'product'|'section'|'link'|'html';
+
 export interface Category {
     id: number,
     parentId: number,
@@ -41,7 +43,7 @@ export const defaultCategory:Category = {
 export interface Item {
     id: number,
     parentId: number,
-    itemType: 'category'|'product'|'section'|'link'|'html',
+    itemType: ItemType,
     sectionTitle: string,
     sectionDescription: string,
     title: string,
@@ -54,7 +56,27 @@ export interface Item {
     priority: number,
     status: number|boolean,
     timestamp: string,
-    category: Category
+    category?: Category|null,
+    product?: Product|null,
+    changed?: boolean,
+}
+
+export const defaultItem:Item = {
+    id: 0,
+    parentId: 0,
+    itemType: 'product',
+    sectionTitle: '',
+    sectionDescription: '',
+    title: '',
+    description: '',
+    urlOverride: '',
+    className: '',
+    imageUrl: '',
+    productsId: 0,
+    categoriesId: 0,
+    priority: 0,
+    status: 0,
+    timestamp: ''
 }
 
 export interface Product {
@@ -63,7 +85,9 @@ export interface Product {
     keyword: string,
     name: string,
     metaTitle: string,
-
+    status: number|boolean,
+    image: string,
+    defaultColor: string,
 }
 
 export interface Keyword {

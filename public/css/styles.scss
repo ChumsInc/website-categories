@@ -79,9 +79,12 @@ $item-link-color: bisque;
         border-color: grey;
       }
       &.inactive {
-        color: grey;
+        color: black;
         background-color: lighten(black, 50%);
-        border-color: red;
+        //border-color: red;
+        button {
+          background-color: lighten(black, 33.333%);
+        }
         img {
           filter: grayscale(50%) brightness(80%);
         }
@@ -111,7 +114,7 @@ $item-link-color: bisque;
   }
 
   .btn-group {
-    background-color: green;
+    //background-color: green;
     &.item-types {
       .btn-secondary,
       .btn-outline-secondary:hover {

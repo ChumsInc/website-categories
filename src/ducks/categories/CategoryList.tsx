@@ -1,21 +1,21 @@
 import React, {useEffect} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import CategoryListFilter from "./CategoryListFilter";
-import ProgressBar from "../../components/ProgressBar";
+import {filteredListSelector, filterSelector, selectedCategorySelector} from "./index";
+import {loadCategoriesAction, selectCategoryAction} from "./actions";
 import {
-    filteredListSelector, filterSelector,
-    listSelector,
-    loadingSelector,
-    pagedFilteredListSelector,
-    selectedCategorySelector
-} from "./index";
-import {SortableTableField} from "../sortableTables/SortableTH";
-import {sortableTableSelector, tableAddedAction, sortChangedAction} from "../sortableTables";
-import {loadCategories, selectCategoryAction} from "./actions";
-import {addPageSetAction, pagedDataSelector} from "../page";
-import ConnectedPager from "../page/ConnectedPager";
-import SortableTable from "../sortableTables/SortableTable";
+    addPageSetAction,
+    pagedDataSelector,
+    PagerDuck,
+    SortableTable,
+    SortableTableField,
+    sortableTableSelector,
+    tableAddedAction
+} from "chums-ducks/dist/ducks";
 import {Category} from "../types";
+import {loadKeywords} from "../keywords";
+import {ErrorBoundary} from "chums-ducks/dist/components";
+
 
 const Title: React.FC<{ title: string }> = ({title}) => (<span dangerouslySetInnerHTML={{__html: title}}/>)
 
@@ -29,17 +29,18 @@ const fields: SortableTableField[] = [
     {field: 'changefreq', title: 'Change Freq.', sortable: true}
 ];
 
-const rowClassName = ({status}:Category) => ({'table-warning': status === 0})
+const rowClassName = ({status}: Category) => ({'table-warning': status === 0})
 
 const CategoryList: React.FC = () => {
     const dispatch = useDispatch();
     useEffect(() => {
+        dispatch(loadCategoriesAction());
+        dispatch(loadKeywords());
         dispatch(addPageSetAction({key: TABLE}));
         dispatch(tableAddedAction({key: TABLE, field: 'keyword', ascending: true}));
-        dispatch(loadCategories());
     }, []);
     const sort = useSelector(sortableTableSelector(TABLE))
-    const loading = useSelector(loadingSelector);
+    // const loading = useSelector(loadingSelector);
     const list = useSelector(filteredListSelector(sort));
     const pagedList = useSelector(pagedDataSelector(TABLE, list));
     const selected = useSelector(selectedCategorySelector);
@@ -49,15 +50,17 @@ const CategoryList: React.FC = () => {
 
     return (
         <div>
-            <CategoryListFilter/>
-            {loading && <ProgressBar striped={true} className="mt-1"/>}
-
+            <ErrorBoundary>
+                <CategoryListFilter/>
+            </ErrorBoundary>
             <div className="table-responsive-sm mt-3">
-                <SortableTable tableKey={TABLE} keyField="keyword" fields={fields} data={pagedList}
-                               rowClassName={rowClassName}
-                               selected={selected.keyword} onSelectRow={onSelectCategory}/>
+                <ErrorBoundary>
+                    <SortableTable tableKey={TABLE} keyField="keyword" fields={fields} data={pagedList}
+                                   rowClassName={rowClassName}
+                                   selected={selected.keyword} onSelectRow={onSelectCategory}/>
+                </ErrorBoundary>
             </div>
-            <ConnectedPager pageKey={TABLE} dataLength={list.length} filtered={!!filter}/>
+            <PagerDuck pageKey={TABLE} dataLength={list.length} filtered={!!filter}/>
         </div>
     )
 }

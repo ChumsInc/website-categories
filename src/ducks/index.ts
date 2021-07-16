@@ -1,24 +1,22 @@
 import {combineReducers} from 'redux';
+import {alertsReducer, pagesReducer, tabsReducer, sortableTablesReducer, sitesReducer} from 'chums-ducks/dist/ducks';
 
-import {default as alertsReducer, } from './alerts';
-import {default as pageReducer} from './page';
-import {default as tabsReducer} from './tabs';
-import {default as siteReducer} from './sites';
 import {default as keywordsReducer} from './keywords';
 import {default as categoriesReducer} from './categories';
-import {default as sortableTablesReducer} from './sortableTables';
-import oldReducers from '../reducers';
+import {default as itemsReducer} from './items';
+import {default as modalEditorReducer} from './modal-editor';
 
 
 const rootReducer = combineReducers({
-    ...oldReducers,
     alerts: alertsReducer,
-    page: pageReducer,
+    pages: pagesReducer,
     tabs: tabsReducer,
-    sites: siteReducer,
+    sites: sitesReducer,
     keywords: keywordsReducer,
     categories: categoriesReducer,
+    items: itemsReducer,
     sortableTables: sortableTablesReducer,
+    modalEditor: modalEditorReducer,
 });
 
 export type RootState = ReturnType<typeof rootReducer>

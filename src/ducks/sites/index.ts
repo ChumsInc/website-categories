@@ -1,5 +1,4 @@
 import {Action, combineReducers} from "redux";
-import {Tab} from "../../types";
 import {RootState} from "../index";
 
 export interface Site {
@@ -19,7 +18,7 @@ export interface SiteAction extends Action {
     }
 }
 
-export const siteSelected = 'app:site:selected';
+export const siteSelected = 'site/selected';
 
 export const siteSelectedAction = (site:Site = defaultSite):SiteAction => ({type: siteSelected, payload: {site}});
 

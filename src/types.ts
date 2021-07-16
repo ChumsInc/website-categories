@@ -12,11 +12,3 @@ export interface BasicAlert {
 }
 
 export type BootstrapSize = 'xs'|'sm'|'md'|'lg'|'xl';
-
-export interface Tab {
-    id: string,
-    title: string,
-    canClose?: boolean,
-    disabled?: boolean,
-    active?: boolean,
-}

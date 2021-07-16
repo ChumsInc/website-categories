@@ -1,39 +1,69 @@
-import {Action, combineReducers} from "redux";
-import {Keyword} from "../types";
+import {combineReducers} from "redux";
+import {ActionInterface, Keyword} from "../types";
 import {ThunkAction} from 'redux-thunk';
 import {RootState} from "../index";
-import {AlertAction} from "../alerts";
-import {siteSelected} from "../sites";
+import {AlertAction} from "chums-ducks";
+import {Site, siteSelected} from "../sites";
+import {buildPath, fetchGET} from "../../fetch";
 
-export const keywordsLoading = 'app:keywords:load-requested';
-export const keywordsLoadingSucceeded = 'app:keywords:load-succeeded';
-export const keywordsLoadingFailed = 'app:keywords:load-failed';
 
-export interface KeywordAction extends Action {
-    payload: {
+export const keywordsLoading = 'keywords/load-requested';
+export const keywordsLoadingSucceeded = 'keywords/load-succeeded';
+export const keywordsLoadingFailed = 'keywords/load-failed';
+
+export interface KeywordAction extends ActionInterface {
+    payload?: {
         list?: Keyword[],
     }
 }
 
-export interface KeywordThunkAction extends ThunkAction<any, RootState, unknown, KeywordAction|AlertAction> {}
+export interface KeywordThunkAction extends ThunkAction<any, RootState, unknown, KeywordAction | AlertAction> {
+}
 
-export const listSelector = (state:RootState) => state.keywords.list;
-export const filteredListSelector = (pagetype:string) => (state:RootState) => state.keywords.list.filter(kw => kw.pagetype === pagetype);
-export const keywordSelector = (kw:string) => (state:RootState) => state.keywords.list.filter(keyword => keyword.keyword === kw);
 
-const listReducer = (state:Keyword[] = [], action:KeywordAction) => {
+export const listSelector = (state: RootState) => state.keywords.list;
+export const filteredListSelector = (pageType?: string) => (state: RootState) => state.keywords.list.filter(kw => !pageType || kw.pagetype === pageType);
+export const keywordSelector = (kw: string) => (state: RootState) => state.keywords.list.filter(keyword => keyword.keyword === kw);
+export const keywordIdSelector = (id:number, itemType: string) => (state: RootState) =>
+    state.keywords.list.filter(kw => kw.pagetype === itemType).filter(kw => kw.id === id);
+
+const keywordURL = (site: Site) => {
+    switch (site.name) {
+    case 'safety':
+        return '/node-safety/keywords';
+    case 'b2b':
+    default:
+        return '/api/b2b/keywords';
+    }
+}
+
+export const loadKeywords = (): KeywordThunkAction => async (dispatch, getState) => {
+    try {
+        const {sites} = getState();
+        dispatch({type: keywordsLoading});
+        const url = buildPath(keywordURL(sites.selected));
+        const {result} = await fetchGET(url, {cache: "no-cache"});
+        dispatch({type: keywordsLoadingSucceeded, payload: {list: result}});
+    } catch (err) {
+        console.log("()", err.message);
+        dispatch({type: keywordsLoadingFailed, payload: {error: err, context: keywordsLoading}});
+    }
+};
+
+
+const listReducer = (state: Keyword[] = [], action: KeywordAction) => {
     const {type, payload} = action;
     switch (type) {
     case siteSelected:
         return [];
     case keywordsLoadingSucceeded:
-        return [...(payload.list || [])];
+        return [...(payload?.list || [])];
     default:
         return state;
     }
 }
 
-const loadingReducer = (state:boolean = false, action:KeywordAction) => {
+const loadingReducer = (state: boolean = false, action: KeywordAction) => {
     switch (action.type) {
     case keywordsLoading:
         return true;
