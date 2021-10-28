@@ -1,20 +1,20 @@
 import React, {useEffect, useState} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import {itemSortPriority} from '../../utils';
-import {itemLoadingSelector, listSelector, savingSortSelector} from "./index";
+import {selectItemsLoading, selectItemList, selectSortSaving} from "./index";
 import ItemCard from "./ItemCard";
 import {saveItemSortAction} from "./actions";
-import {loadingSelector} from "../categories";
+import {selectCategoriesLoading} from "../categories";
 import {Progress, ProgressBar} from "chums-ducks/dist/components";
 import {HTML5Backend} from "react-dnd-html5-backend";
 import {DndProvider} from "react-dnd";
 
 const CategoryItemList: React.FC = () => {
     const dispatch = useDispatch();
-    const list = useSelector(listSelector);
-    const loadingCategory = useSelector(loadingSelector);
-    const loadingItems = useSelector(itemLoadingSelector);
-    const saving = useSelector(savingSortSelector);
+    const list = useSelector(selectItemList);
+    const loadingCategory = useSelector(selectCategoriesLoading);
+    const loadingItems = useSelector(selectItemsLoading);
+    const saving = useSelector(selectSortSaving);
     const loading = loadingCategory || loadingItems || saving;
 
     const [items, setItems] = useState(list);

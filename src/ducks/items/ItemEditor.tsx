@@ -2,17 +2,19 @@ import React, {FormEvent, Fragment, useState} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import classNames from "classnames";
 import {deleteCategoryItemAction, saveCategoryItemAction, selectItemAction, updateItemAction} from "./actions";
-import {itemTypes, selectedItemSelector} from "./index";
+import {itemTypes, selectCurrentItem} from "./index";
 import {FieldInput, FieldTextArea, FormColumn} from "chums-ducks/dist/components";
 import {defaultItem, InputField, Keyword} from "../types";
 import InactiveKeywordAlert from "../keywords/InactiveKeywordAlert";
 import ProductSelect from "../keywords/ProductSelect";
 import CategorySelect from "../categories/CategorySelect";
-import {disallowedParentsSelector} from "../categories";
+import {disallowedParentsSelector, selectCurrentCategory} from "../categories";
 import ModalEditor from "../../components/ModalEditor";
 import {setModalEditorAction} from "../modal-editor";
 import {Alert} from "chums-ducks/dist/ducks";
-import Button from "./Button";
+import StatusButton from "../../components/StatusButton";
+import ItemTypeButtonSet from "./ItemTypeButtonSet";
+import {InputGroup} from "chums-ducks";
 
 type EditorField = 'sectionDescription' | 'description';
 
@@ -36,10 +38,13 @@ const activeButtonClassName = (state: boolean, defaultState: boolean = false) =>
 
 const ItemEditor: React.FC = () => {
     const dispatch = useDispatch();
-    const item = useSelector(selectedItemSelector);
+    const category = useSelector(selectCurrentCategory);
+    const item = useSelector(selectCurrentItem);
     const disallowedParents = useSelector(disallowedParentsSelector);
     const [showEditor, setShowEditor] = useState(false);
     const [editorField, setEditorField] = useState('description' as EditorField);
+
+    const onChangeStatus = (status:boolean) => changeHandler({field: 'status', value: status});
 
     const onSubmit = (ev: FormEvent<HTMLFormElement>) => {
         ev.preventDefault();
@@ -73,7 +78,7 @@ const ItemEditor: React.FC = () => {
         if (item.changed && !window.confirm('Are you sure you want to lose your current changes?')) {
             return;
         }
-        dispatch(selectItemAction(defaultItem));
+        dispatch(selectItemAction({...defaultItem, parentId: category.id}));
     }
 
     const onDeleteItem = () => {
@@ -83,114 +88,65 @@ const ItemEditor: React.FC = () => {
         dispatch(deleteCategoryItemAction());
     }
 
-    const {
-        id,
-        itemType,
-        status,
-        sectionTitle,
-        sectionDescription,
-        title,
-        description,
-        productsId,
-        categoriesId,
-        product,
-        imageUrl,
-        className,
-        urlOverride,
-        priority,
-        parentId,
-        category,
-        changed,
-    } = item;
+    const {itemType} = item;
 
     const imageHelpText = itemType === itemTypes.link
         ? 'Full path, eg. /images/pages/35th-video-lg.jpg'
         : 'Relative to /images/products/:size/';
 
 
+    if (!category.id) {
+        return (
+            <Alert color="info">Please select (or save) a category first.</Alert>
+        )
+    }
     return (
         <Fragment>
             <div className="sticky-50">
                 <h4>Edit Item</h4>
+                <hr />
                 <form onSubmit={onSubmit}>
                     <FormColumn label="ID / Status" width={8}>
                         <div className="row g-3">
-                            <div className="col-auto">
-                                <FieldInput value={id || 'new item'} readOnly/>
+                            <div className="col">
+                                <FieldInput value={item.id || 'new'} readOnly/>
                             </div>
                             <div className="col">
-                                <div className="btn-group btn-group-sm">
-                                    <button type="button" className={classNames('btn btn-sm', {
-                                        'btn-outline-success': !status,
-                                        'btn-success': status
-                                    })}
-                                            onClick={() => changeHandler({field: 'status', value: 1})}>
-                                        Enabled
-                                    </button>
-                                    <button type="button" className={classNames('btn btn-sm', {
-                                        'btn-outline-danger': status,
-                                        'btn-danger': !status
-                                    })}
-                                            onClick={() => changeHandler({field: 'status', value: 0})}>
-                                        Disabled
-                                    </button>
-                                </div>
+                                <StatusButton status={!!item.status} onChange={onChangeStatus} />
                             </div>
                         </div>
                     </FormColumn>
                     <FormColumn width={8} label="Item Type">
-                        <div className="btn-group btn-group-sm item-types">
-                            <button type="button"
-                                    onClick={() => changeHandler({field: 'itemType', value: itemTypes.section})}
-                                    className={classNames('section', buttonClassName(itemType === itemTypes.section))}>
-                                Section
-                            </button>
-
-                            <button type="button"
-                                    onClick={() => changeHandler({field: 'itemType', value: itemTypes.product})}
-                                    className={classNames('product', buttonClassName(itemType === itemTypes.product))}>
-                                Product
-                            </button>
-                            <button type="button"
-                                    onClick={() => changeHandler({field: 'itemType', value: itemTypes.category})}
-                                    className={classNames('category', buttonClassName(itemType === itemTypes.category))}>
-                                Category
-                            </button>
-                            <button type="button"
-                                    onClick={() => changeHandler({field: 'itemType', value: itemTypes.link})}
-                                    className={classNames('link', buttonClassName(itemType === itemTypes.link))}>
-                                Link
-                            </button>
-                        </div>
+                        <ItemTypeButtonSet />
                     </FormColumn>
                     {itemType === itemTypes.section && (
                         <Fragment>
                             <FormColumn label="Section Title" width={8}>
-                                <FieldInput field="sectionTitle" value={sectionTitle} onChange={changeHandler}/>
+                                <FieldInput field="sectionTitle" value={item.sectionTitle} onChange={changeHandler}/>
                             </FormColumn>
                             <FormColumn label="Section Description" width={8}>
-                                <FieldInput field="sectionDescription" value={sectionDescription}
+                                <FieldInput field="sectionDescription" value={item.sectionDescription}
                                             onChange={changeHandler}/>
                             </FormColumn>
                         </Fragment>
                     )}
-                    {itemType !== itemTypes.section && itemType !== itemTypes.other && (
+                    {itemType !== itemTypes.section && itemType !== itemTypes.html && (
                         <FormColumn label="Title" width={8}>
-                            <FieldInput field="title" value={title} onChange={changeHandler}/>
+                            <FieldInput field="title" value={item.title} onChange={changeHandler}/>
                         </FormColumn>
                     )}
                     {itemType === itemTypes.product && (
                         <FormColumn width={8} label="Product">
-                            <ProductSelect value={productsId} required
+                            <ProductSelect value={item.productsId} required
                                            onChange={(keyword?: Keyword) => keywordChangeHandler('productsId', keyword)}/>
                         </FormColumn>
                     )}
-                    {product?.keyword && (
-                        <InactiveKeywordAlert keyword={product?.keyword}/>
+                    {item.product?.keyword && (
+                        <InactiveKeywordAlert keyword={item.product?.keyword}/>
                     )}
                     {itemType === itemTypes.category && (
                         <FormColumn width={8} label="Category">
-                            <CategorySelect value={categoriesId}
+                            <CategorySelect value={item.categoriesId}
                                             onChange={(ev) => changeHandler({
                                                 field: 'categoriesId',
                                                 value: ev.target.value
@@ -199,12 +155,12 @@ const ItemEditor: React.FC = () => {
                         </FormColumn>
                     )}
                     {itemType === itemTypes.category && (
-                        <InactiveKeywordAlert id={categoriesId} itemType={itemType}/>
+                        <InactiveKeywordAlert id={item.categoriesId} itemType={itemType}/>
                     )}
-                    {itemType !== itemTypes.section && itemType !== itemTypes.other && (
+                    {itemType !== itemTypes.section && itemType !== itemTypes.html && (
                         <FormColumn width={8} label="Description">
                             <div className="input-group input-group-sm">
-                                <FieldTextArea value={description} field="description"
+                                <FieldTextArea value={item.description} field="description"
                                                onChange={changeHandler}/>
                                 <button type="button" className="btn btn-outline-secondary"
                                         onClick={() => onClickEdit('description')}>
@@ -213,20 +169,20 @@ const ItemEditor: React.FC = () => {
                             </div>
                         </FormColumn>
                     )}
-                    {itemType !== itemTypes.other && (
+                    {itemType !== itemTypes.html && (
                         <FormColumn label="Image Filename" width={8}>
-                            <FieldInput field="imageUrl" value={imageUrl} onChange={changeHandler}/>
+                            <FieldInput field="imageUrl" value={item.imageUrl} onChange={changeHandler}/>
                             <small>{imageHelpText}</small>
                         </FormColumn>
                     )}
-                    {itemType !== itemTypes.other && (
+                    {itemType !== itemTypes.html && (
                         <FormColumn label="Item Classname" width={8}>
-                            <FieldInput value={className} field="className" onChange={changeHandler}/>
+                            <FieldInput value={item.className} field="className" onChange={changeHandler}/>
                         </FormColumn>
                     )}
-                    {itemType !== itemTypes.other && (
+                    {itemType !== itemTypes.html && (
                         <FormColumn label="Link To">
-                            <FieldInput value={urlOverride}
+                            <FieldInput value={item.urlOverride}
                                         field="urlOverride"
                                         required={itemType === itemTypes.link}
                                         onChange={changeHandler}
@@ -234,18 +190,23 @@ const ItemEditor: React.FC = () => {
                             <small>If outside of domain, make sure to include 'https://'</small>
                         </FormColumn>
                     )}
-                    {itemType === itemTypes.other && (
+                    {itemType === itemTypes.html && (
                         <Alert color="warning">Pick an item or an item type.</Alert>
                     )}
                     <FormColumn width={8} label={' '}>
-                        <Button type="submit" disabled={itemType === itemTypes.other || !parentId}
-                                className="btn btn-sm btn-primary me-1">Save</Button>
-                        <Button type="button" onClick={onNewItem} disabled={!parentId}
-                                className="btn btn-sm btn-outline-secondary me-1">New Item</Button>
-                        <Button type="button" onClick={onDeleteItem}
-                                className="btn btn-sm btn-outline-danger me-1" disabled={id === 0}>Delete</Button>
+                        <button type="submit" disabled={!item.parentId} className="btn btn-sm btn-primary me-1">
+                            Save
+                        </button>
+                        <button type="button" onClick={onNewItem} disabled={!item.parentId}
+                                className="btn btn-sm btn-outline-secondary me-1">
+                            New Item
+                        </button>
+                        <button type="button" onClick={onDeleteItem}
+                                className="btn btn-sm btn-outline-danger me-1" disabled={item.id === 0}>
+                            Delete
+                        </button>
                     </FormColumn>
-                    {changed && <Alert message="Don't forget to save."/>}
+                    {item.changed && <Alert message="Don't forget to save."/>}
                 </form>
             </div>
             {showEditor && <ModalEditor title={`Edit '${editorField}'`} content={item[editorField] || ''}

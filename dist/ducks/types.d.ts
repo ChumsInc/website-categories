@@ -5,6 +5,10 @@ export interface ActionInterface {
     error?: boolean;
 }
 export declare type ItemType = 'category' | 'product' | 'section' | 'link' | 'html';
+export interface CategoryTextFields {
+    pageText: string;
+    descriptionMeta: string;
+}
 export interface Category {
     id: number;
     parentId: number;
@@ -18,7 +22,7 @@ export interface Category {
     timestamp: string;
     lifestyle?: string;
     css?: string;
-    children: any;
+    children?: Item[];
     changed?: boolean;
 }
 export declare const defaultCategory: Category;

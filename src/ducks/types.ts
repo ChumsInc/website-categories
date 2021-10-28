@@ -7,6 +7,11 @@ export interface ActionInterface {
 
 export type ItemType = 'category'|'product'|'section'|'link'|'html';
 
+export interface CategoryTextFields {
+    pageText: string,
+    descriptionMeta: string,
+}
+
 export interface Category {
     id: number,
     parentId: number,
@@ -20,7 +25,7 @@ export interface Category {
     timestamp: string,
     lifestyle?: string,
     css?: string,
-    children: any,
+    children?: Item[],
     changed?: boolean,
 }
 
@@ -31,7 +36,7 @@ export const defaultCategory:Category = {
     keyword: '',
     pageText: '',
     descriptionMeta: '',
-    status: 0,
+    status: true,
     changefreq: 'monthly',
     priority: 0,
     timestamp: '',
@@ -75,7 +80,7 @@ export const defaultItem:Item = {
     productsId: 0,
     categoriesId: 0,
     priority: 0,
-    status: 0,
+    status: true,
     timestamp: ''
 }
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Item } from "../types";
+import "./ItemCard.scss";
 interface ItemCardProps {
     item: Item;
     index: number;

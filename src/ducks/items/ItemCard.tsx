@@ -3,16 +3,16 @@ import {useDrag, useDrop, DropTargetMonitor} from 'react-dnd';
 import {Item} from "../types";
 import {XYCoord} from "dnd-core";
 import classNames from "classnames";
-import {itemTypes, selectedItemSelector} from "./index";
+import {itemTypes, selectCurrentItem} from "./index";
 import ProductImage from "./ProductImage";
 import {useDispatch, useSelector} from "react-redux";
 import CategoryImage from "./CategoryImage";
-import {buildPath} from "../../fetch";
+import {buildPath} from "chums-ducks";
 import {PATH_URL_OVERRIDE, SITE_NAMES} from "../../constants";
 import {currentSiteSelector} from "../sites";
 import isURL from 'validator/lib/isURL';
 import {selectItemAction} from "./actions";
-// import "./sortable-item.scss";
+import "./ItemCard.scss";
 
 
 interface ItemCardProps {
@@ -28,16 +28,13 @@ interface DragItem {
 }
 
 const style = {
-    // border: '1px dashed gray',
-    padding: '0.5rem 1rem',
-    marginBottom: '.5rem',
     cursor: 'move',
 }
 
 const ItemCard:React.FC<ItemCardProps> = ({item, index, moveItem}) => {
     const dispatch = useDispatch();
     const ref = useRef<HTMLDivElement>(null);
-    const selected = useSelector(selectedItemSelector);
+    const selected = useSelector(selectCurrentItem);
     const site = useSelector(currentSiteSelector);
 
     const [{handlerId}, drop] = useDrop({
@@ -93,10 +90,13 @@ const ItemCard:React.FC<ItemCardProps> = ({item, index, moveItem}) => {
         category: itemType === itemTypes.category,
         section: itemType === itemTypes.section,
         link: itemType === itemTypes.link,
-        other: itemType === itemTypes.other,
+        other: itemType === itemTypes.html,
         inactive: !(!!item.status || (!!product && !!product.status))
     };
-    const btnClassName = {'btn-light': !selected, 'btn-dark': !!selected};
+    const btnClassName = {
+        'btn-light': selected.id === item.id,
+        'btn-dark': selected.id !== item.id
+    };
 
     const onClick = () => {
         dispatch(selectItemAction(item));
@@ -105,24 +105,24 @@ const ItemCard:React.FC<ItemCardProps> = ({item, index, moveItem}) => {
     return (
         <div ref={ref} style={{...style, opacity}} data-handler-id={handlerId}
              className={classNames("sortable-item", className)}>
-            <div>
-                <button type="button"  onClick={onClick}
-                        className={classNames("btn btn-sm mb-3", btnClassName)}>
-                    Select
-                </button>
+            <button type="button"  onClick={onClick}
+                    className={classNames("btn btn-sm mb-1 sortable-item--edit-button", btnClassName)}>
+                Edit
+            </button>
+            <div className="sortable-item-padding">
+                {itemType === itemTypes.product && product && <ProductImage image={product.image} defaultColor={product.defaultColor} imageUrl={imageUrl}/>}
+                {itemType === itemTypes.category && category && <ProductImage imageUrl={imageUrl}/>}
+                {itemType === itemTypes.link && !!imageUrl && <ProductImage imageUrl={imageUrl}/>}
+                {!urlOverride && <div>{item.title || item.sectionTitle}</div>}
+                {!!urlOverride && (
+                    <div>
+                        <a href={isURL(urlOverride) ? urlOverride : buildPath(PATH_URL_OVERRIDE, {site: site.domain}) + urlOverride}
+                           target="_blank">
+                            {item.title || item.sectionTitle}
+                        </a>
+                    </div>
+                )}
             </div>
-            {itemType === itemTypes.product && product && <ProductImage image={product.image} defaultColor={product.defaultColor} imageUrl={imageUrl}/>}
-            {itemType === itemTypes.category && category && <ProductImage imageUrl={imageUrl}/>}
-            {itemType === itemTypes.link && !!imageUrl && <ProductImage imageUrl={imageUrl}/>}
-            {!urlOverride && <div>{item.title || item.sectionTitle}</div>}
-            {!!urlOverride && (
-                <div>
-                    <a href={isURL(urlOverride) ? urlOverride : buildPath(PATH_URL_OVERRIDE, {site: site.domain}) + urlOverride}
-                       target="_blank">
-                        {item.title || item.sectionTitle}
-                    </a>
-                </div>
-            )}
         </div>
     )
 }

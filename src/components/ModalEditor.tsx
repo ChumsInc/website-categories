@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import Modal from "chums-ducks/dist/components/Modal";
+import {Modal} from "chums-ducks";
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-html";
 import "ace-builds/src-noconflict/theme-github";

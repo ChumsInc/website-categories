@@ -1,6 +1,6 @@
 import {Category} from "../types";
 import {Site} from "../sites";
-import {buildPath} from "../../fetch";
+import {buildPath} from "chums-ducks";
 import {PREVIEW_URL} from "../../constants";
 
 export const calcChildIds = (categories:Category[], id:number = 0):number[] => {

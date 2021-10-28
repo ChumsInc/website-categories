@@ -2,9 +2,8 @@ import {combineReducers} from "redux";
 import {ActionInterface, Keyword} from "../types";
 import {ThunkAction} from 'redux-thunk';
 import {RootState} from "../index";
-import {AlertAction} from "chums-ducks";
+import {AlertAction, buildPath, fetchJSON} from "chums-ducks";
 import {Site, siteSelected} from "../sites";
-import {buildPath, fetchGET} from "../../fetch";
 
 
 export const keywordsLoading = 'keywords/load-requested';
@@ -24,7 +23,7 @@ export interface KeywordThunkAction extends ThunkAction<any, RootState, unknown,
 export const listSelector = (state: RootState) => state.keywords.list;
 export const filteredListSelector = (pageType?: string) => (state: RootState) => state.keywords.list.filter(kw => !pageType || kw.pagetype === pageType);
 export const keywordSelector = (kw: string) => (state: RootState) => state.keywords.list.filter(keyword => keyword.keyword === kw);
-export const keywordIdSelector = (id:number, itemType: string) => (state: RootState) =>
+export const keywordIdSelector = (id: number, itemType: string) => (state: RootState) =>
     state.keywords.list.filter(kw => kw.pagetype === itemType).filter(kw => kw.id === id);
 
 const keywordURL = (site: Site) => {
@@ -42,11 +41,13 @@ export const loadKeywords = (): KeywordThunkAction => async (dispatch, getState)
         const {sites} = getState();
         dispatch({type: keywordsLoading});
         const url = buildPath(keywordURL(sites.selected));
-        const {result} = await fetchGET(url, {cache: "no-cache"});
+        const {result} = await fetchJSON(url, {cache: "no-cache"});
         dispatch({type: keywordsLoadingSucceeded, payload: {list: result}});
-    } catch (err) {
-        console.log("()", err.message);
-        dispatch({type: keywordsLoadingFailed, payload: {error: err, context: keywordsLoading}});
+    } catch (err: unknown) {
+        if (err instanceof Error) {
+            console.log("()", err.message);
+            dispatch({type: keywordsLoadingFailed, payload: {error: err, context: keywordsLoading}});
+        }
     }
 };
 

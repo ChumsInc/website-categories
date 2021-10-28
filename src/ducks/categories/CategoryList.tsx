@@ -1,12 +1,12 @@
 import React, {useEffect} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import CategoryListFilter from "./CategoryListFilter";
-import {filteredListSelector, filterSelector, selectedCategorySelector} from "./index";
+import {selectFilteredList, selectCategoryFilter, selectCurrentCategory} from "./index";
 import {loadCategoriesAction, selectCategoryAction} from "./actions";
 import {
     addPageSetAction,
     pagedDataSelector,
-    PagerDuck,
+    PagerDuck, selectPagedData, selectTableSort,
     SortableTable,
     SortableTableField,
     sortableTableSelector,
@@ -39,29 +39,28 @@ const CategoryList: React.FC = () => {
         dispatch(addPageSetAction({key: TABLE}));
         dispatch(tableAddedAction({key: TABLE, field: 'keyword', ascending: true}));
     }, []);
-    const sort = useSelector(sortableTableSelector(TABLE))
-    // const loading = useSelector(loadingSelector);
-    const list = useSelector(filteredListSelector(sort));
-    const pagedList = useSelector(pagedDataSelector(TABLE, list));
-    const selected = useSelector(selectedCategorySelector);
+    const sort = useSelector(selectTableSort(TABLE))
+    const list = useSelector(selectFilteredList(sort));
+    const pagedList = useSelector(selectPagedData(TABLE, list));
+    const selected = useSelector(selectCurrentCategory);
+    const filter = useSelector(selectCategoryFilter);
+
     const onSelectCategory = (cat: Category) => dispatch(selectCategoryAction(cat));
-    const filter = useSelector(filterSelector);
 
 
     return (
-        <div>
-            <ErrorBoundary>
-                <CategoryListFilter/>
-            </ErrorBoundary>
-            <div className="table-responsive-sm mt-3">
+        <ErrorBoundary>
+            <CategoryListFilter/>
+            <div className="mt-3">
                 <ErrorBoundary>
                     <SortableTable tableKey={TABLE} keyField="keyword" fields={fields} data={pagedList}
+                                   size="xs"
                                    rowClassName={rowClassName}
                                    selected={selected.keyword} onSelectRow={onSelectCategory}/>
                 </ErrorBoundary>
             </div>
             <PagerDuck pageKey={TABLE} dataLength={list.length} filtered={!!filter}/>
-        </div>
+        </ErrorBoundary>
     )
 }
 

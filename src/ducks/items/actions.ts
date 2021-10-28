@@ -1,28 +1,10 @@
-import {
-    CATEGORIES_ITEM_URL,
-    CATEGORY_DELETE_ITEM_URL,
-    CATEGORY_SAVE_ITEM_URL,
-    CATEGORY_SAVE_SORT_URL,
-    CREATE_NEW_ITEM,
-    DELETE_CATEGORY_ITEM,
-    FETCH_CATEGORY_ITEM,
-    FETCH_FAILURE,
-    FETCH_INIT,
-    FETCH_SUCCESS, NEW_ITEM,
-    SAVE_CATEGORY_ITEM,
-    SAVE_CATEGORY_ITEM_SORT,
-    SELECT_CATEGORY_ITEM,
-    SORT_ITEMS,
-    UPDATE_CATEGORY_ITEM
-} from "../../constants";
-import {buildPath, fetchDELETE, fetchGET, fetchPOST} from "../../fetch";
+import {buildPath, fetchDELETE, fetchJSON, fetchPOST} from "chums-ducks";
 import {defaultItem, Item} from "../types";
 import {
     deleteItemFailed,
-    deleteItemRequested, deleteItemSucceeded,
+    deleteItemRequested,
+    deleteItemSucceeded,
     itemChanged,
-    itemListSelector,
-    itemLoadingSelector,
     ItemsAction,
     itemSelected,
     itemSortSaveFailed,
@@ -35,11 +17,13 @@ import {
     saveItemFailed,
     saveItemRequested,
     saveItemSucceeded,
-    savingItemSelector,
-    savingSortSelector,
-    selectedItemSelector
+    selectCurrentItem,
+    selectItemList,
+    selectItemSaving,
+    selectItemsLoading,
+    selectSortSaving
 } from "./index";
-import {loadingSelector, selectedCategorySelector} from "../categories";
+import {selectCategoriesLoading, selectCurrentCategory} from "../categories";
 import {currentSiteSelector} from "../sites";
 
 
@@ -111,29 +95,31 @@ export const fetchItemAction = (id: number): ItemsThunkAction => async (dispatch
         }
         const state = getState();
         const site = currentSiteSelector(state);
-        const category = selectedCategorySelector(state);
-        if (loadingSelector(state) || itemLoadingSelector(state)) {
+        const category = selectCurrentCategory(state);
+        if (selectCategoriesLoading(state) || selectItemsLoading(state)) {
             return;
         }
         dispatch({type: loadItemRequested});
         const url = buildPath(URL[site.name].fetchItems, {parentId: category.id, id});
-        const {categoryItems} = await fetchGET(url);
+        const {categoryItems} = await fetchJSON(url, {cache: 'no-cache'});
         const [item] = categoryItems;
         dispatch({type: loadItemSucceeded, payload: {item}});
-    } catch (err) {
-        console.log("()", err.message);
-        dispatch({type: loadItemFailed, payload: {error: err, context: loadItemRequested}});
+    } catch (err: unknown) {
+        if (err instanceof Error) {
+            console.log("()", err.message);
+            dispatch({type: loadItemFailed, payload: {error: err, context: loadItemRequested}});
+        }
     }
 }
 
 export const saveItemSortAction = (items: Item[]): ItemsThunkAction => async (dispatch, getState) => {
     try {
         const state = getState();
-        if (loadingSelector(state) || itemLoadingSelector(state)) {
+        if (selectCategoriesLoading(state) || selectItemsLoading(state)) {
             return;
         }
         const site = currentSiteSelector(state);
-        const {id: parentId} = selectedCategorySelector(state);
+        const {id: parentId} = selectCurrentCategory(state);
         const body = {
             items: items.map(({id, priority}) => ({id, priority}))
         };
@@ -142,9 +128,11 @@ export const saveItemSortAction = (items: Item[]): ItemsThunkAction => async (di
         dispatch({type: itemSortSaveRequested});
         const {categoryItems} = await fetchPOST(url, body);
         dispatch({type: itemSortSaveSucceeded, payload: {list: categoryItems}});
-    } catch (err) {
-        console.log("saveItemSortAction()", err.message);
-        dispatch({type: itemSortSaveFailed, payload: {error: err, context: itemSortSaveRequested}});
+    } catch (err: unknown) {
+        if (err instanceof Error) {
+            console.log("saveItemSortAction()", err.message);
+            dispatch({type: itemSortSaveFailed, payload: {error: err, context: itemSortSaveRequested}});
+        }
     }
 };
 
@@ -155,23 +143,25 @@ export const saveCategoryItemAction = (): ItemsThunkAction =>
     async (dispatch, getState) => {
         try {
             const state = getState();
-            if (loadingSelector(state) || itemLoadingSelector(state) || savingSortSelector(state) || savingItemSelector(state)) {
+            if (selectCategoriesLoading(state) || selectItemsLoading(state) || selectSortSaving(state) || selectItemSaving(state)) {
                 return;
             }
             const site = currentSiteSelector(state);
-            const item = selectedItemSelector(state);
-            item.parentId = selectedCategorySelector(state).id;
+            const item = selectCurrentItem(state);
+            item.parentId = selectCurrentCategory(state).id;
             if (item.id === 0) {
-                item.priority = itemListSelector(state).length;
+                item.priority = selectItemList(state).length;
             }
 
             dispatch({type: saveItemRequested});
             const url = URL[site.name].saveItem;
             const {item: savedItem} = await fetchPOST(url, item);
             dispatch({type: saveItemSucceeded, payload: {item: savedItem}});
-        } catch (err) {
-            console.log("()", err.message);
-            dispatch({type: saveItemFailed, payload: {error: err, context: saveItemRequested}});
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                console.log("()", err.message);
+                dispatch({type: saveItemFailed, payload: {error: err, context: saveItemRequested}});
+            }
         }
     };
 
@@ -179,11 +169,11 @@ export const deleteCategoryItemAction = (): ItemsThunkAction =>
     async (dispatch, getState) => {
         try {
             const state = getState();
-            if (loadingSelector(state) || itemLoadingSelector(state) || savingSortSelector(state) || savingItemSelector(state)) {
+            if (selectCategoriesLoading(state) || selectItemsLoading(state) || selectSortSaving(state) || selectItemSaving(state)) {
                 return;
             }
             const site = currentSiteSelector(state);
-            const item = selectedItemSelector(state);
+            const item = selectCurrentItem(state);
             if (!item.id) {
                 return;
             }
@@ -191,12 +181,17 @@ export const deleteCategoryItemAction = (): ItemsThunkAction =>
             const url = buildPath(URL[site.name].deleteItem, {id: item.id, parentId: item.parentId});
             const {items = []} = await fetchDELETE(url);
             dispatch({type: deleteItemSucceeded, payload: {list: items}});
-        } catch (err) {
-            console.log("deleteCategoryItemAction()", err.message);
-            dispatch({type: deleteItemFailed, payload: {error: err, context: deleteItemRequested}});
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                console.log("deleteCategoryItemAction()", err.message);
+                dispatch({type: deleteItemFailed, payload: {error: err, context: deleteItemRequested}});
+            }
         }
     };
 
 
-export const createNewItemAction = (parentId: number) => ({type: itemSelected, payload: {item: {...defaultItem, parentId}}});
+export const createNewItemAction = (parentId: number) => ({
+    type: itemSelected,
+    payload: {item: {...defaultItem, parentId}}
+});
 

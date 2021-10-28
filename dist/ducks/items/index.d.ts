@@ -1,4 +1,4 @@
-import { ActionInterface, Category, Item } from '../types';
+import { ActionInterface, Category, Item, ItemType } from '../types';
 import { ThunkAction } from "redux-thunk";
 import { RootState } from "../index";
 import { EmptyObject } from "redux";
@@ -17,13 +17,10 @@ export declare const saveItemFailed = "items/saveItem-failed";
 export declare const deleteItemRequested = "items/deleteItem";
 export declare const deleteItemSucceeded = "items/deleteItem-succeeded";
 export declare const deleteItemFailed = "items/deleteItem-failed";
-export declare const itemTypes: {
-    product: string;
-    category: string;
-    section: string;
-    link: string;
-    other: string;
+export declare type ItemTypeList = {
+    [key in ItemType]: ItemType;
 };
+export declare const itemTypes: ItemTypeList;
 export interface ItemsAction extends ActionInterface {
     payload?: {
         list?: Item[];
@@ -44,16 +41,15 @@ export interface ItemsState {
 }
 export declare const defaultItemState: ItemsState;
 export declare const itemSort: (a: Item, b: Item) => number;
-export declare const listSelector: (state: RootState) => Item[];
-export declare const itemSelector: (id: number) => (state: RootState) => Item;
-export declare const itemListSelector: (state: RootState) => Item[];
-export declare const selectedItemSelector: (state: RootState) => Item;
-export declare const itemLoadingSelector: (state: RootState) => boolean;
-export declare const savingSortSelector: (state: RootState) => boolean;
-export declare const savingItemSelector: (state: RootState) => boolean;
+export declare const selectItemList: (state: RootState) => Item[];
+export declare const selectItemById: (id: number) => (state: RootState) => Item;
+export declare const selectCurrentItem: (state: RootState) => Item;
+export declare const selectItemsLoading: (state: RootState) => boolean;
+export declare const selectSortSaving: (state: RootState) => boolean;
+export declare const selectItemSaving: (state: RootState) => boolean;
 declare const _default: import("redux").Reducer<import("redux").CombinedState<{
     list: Item[];
-    selected: never;
+    selected: Item;
     loading: boolean;
     savingItem: boolean;
     savingSort: boolean;

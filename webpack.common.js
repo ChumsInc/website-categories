@@ -1,7 +1,10 @@
 const path = require('path');
+// const {BundleAnalyzerPlugin} = require('webpack-bundle-analyzer');
+
+require('dotenv').config();
 
 module.exports = {
-    entry: './src/index.js',
+    entry: './src/index.tsx',
     module: {
         rules: [
             {
@@ -10,9 +13,9 @@ module.exports = {
                 exclude: /node_modules/,
             },
             {
-                test: /\.js$/,
-                exclude: '/node_modules/',
-                use: ['babel-loader']
+                test: /\.jsx?$/,
+                use: ['babel-loader'],
+                exclude: /node_modules/,
             },
             {
                 test: /\.css$/,

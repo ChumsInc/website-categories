@@ -17,7 +17,6 @@ export const saveCategory = 'categories/save-requested';
 export const saveCategorySucceeded = 'categories/save-succeeded';
 export const saveCategoryFailed = 'categories/save-failed';
 
-
 export type CategorySortField = 'id' | 'keyword' | 'title' | 'parentId' | 'changefreq';
 
 export interface CategoryAction extends ActionInterface {
@@ -54,17 +53,17 @@ export const categorySorter = ({field, ascending}: SorterProps) => (a: any, b: a
     return 0;
 }
 
-export const showInactiveSelector = (state: RootState):boolean => state.categories.showInactive;
+export const selectShowInactive = (state: RootState):boolean => state.categories.showInactive;
 
-export const filterSelector = (state: RootState) => state.categories.filter;
+export const selectCategoryFilter = (state: RootState) => state.categories.filter;
 
-export const loadingSelector = (state: RootState) => state.categories.loading;
+export const selectCategoriesLoading = (state: RootState) => state.categories.loading;
 
-export const listSelector = (sort:SorterProps) => (state: RootState):Category[] => {
+export const selectCategoryList = (sort:SorterProps) => (state: RootState):Category[] => {
     return state.categories.list.sort(categorySorter(sort));
 }
 
-export const filteredListSelector = (sort: SorterProps) => (state: RootState):Category[] => {
+export const selectFilteredList = (sort: SorterProps) => (state: RootState):Category[] => {
     const {showInactive, filter, list} = state.categories;
     let filterRegex = /^/;
     let filterIDRegex = /^/;
@@ -86,11 +85,11 @@ export const filteredListSelector = (sort: SorterProps) => (state: RootState):Ca
 
 export const pagedFilteredListSelector = (tableKey: string) => (state:RootState):Category[] => {
     const {field, ascending} = sortableTableSelector(tableKey)(state);
-    const list = filteredListSelector({field, ascending})(state);
+    const list = selectFilteredList({field, ascending})(state);
     return pagedDataSelector(tableKey, list)(state);
 }
 
-export const selectedCategorySelector = (state:RootState):Category => state.categories.selected;
+export const selectCurrentCategory = (state:RootState):Category => state.categories.selected;
 
 export const childCategoriesSelector = (state:RootState):number[] => calcChildIds(state.categories.list, state.categories.selected.id);
 
@@ -149,10 +148,13 @@ const selectedReducer = (state: Category = {...defaultCategory}, action:Category
     const {type, payload} = action;
     switch (type) {
     case categorySelected:
-        if (!payload?.category) {
-            return {...defaultCategory};
+        if (payload?.category) {
+            if (!payload.category.children) {
+                payload.category.children = [];
+            }
+            return {...payload?.category};
         }
-        return {...payload?.category};
+        return {...defaultCategory};
     case categoryChanged:
         return {...state, ...payload?.change, changed: true};
     case loadCategoriesSucceeded:

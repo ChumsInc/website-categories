@@ -1,6 +1,6 @@
 import React from 'react';
 import {parseImageFilename} from "../../utils";
-import {buildPath} from "../../fetch";
+import {buildPath} from "chums-ducks";
 
 interface ProductImageProps {
     title?: string,

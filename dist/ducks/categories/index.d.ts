@@ -29,13 +29,13 @@ export interface CategoryThunkAction extends ThunkAction<any, RootState, unknown
 }
 export declare const categoriesURL: (site: string) => "/node-safety/products/category/:id(\\d+)?" | "/api/b2b/products/category/:id(\\d+)?";
 export declare const categorySorter: ({ field, ascending }: SorterProps) => (a: any, b: any) => number;
-export declare const showInactiveSelector: (state: RootState) => boolean;
-export declare const filterSelector: (state: RootState) => string;
-export declare const loadingSelector: (state: RootState) => boolean;
-export declare const listSelector: (sort: SorterProps) => (state: RootState) => Category[];
-export declare const filteredListSelector: (sort: SorterProps) => (state: RootState) => Category[];
+export declare const selectShowInactive: (state: RootState) => boolean;
+export declare const selectCategoryFilter: (state: RootState) => string;
+export declare const selectCategoriesLoading: (state: RootState) => boolean;
+export declare const selectCategoryList: (sort: SorterProps) => (state: RootState) => Category[];
+export declare const selectFilteredList: (sort: SorterProps) => (state: RootState) => Category[];
 export declare const pagedFilteredListSelector: (tableKey: string) => (state: RootState) => Category[];
-export declare const selectedCategorySelector: (state: RootState) => Category;
+export declare const selectCurrentCategory: (state: RootState) => Category;
 export declare const childCategoriesSelector: (state: RootState) => number[];
 export declare const disallowedParentsSelector: (state: RootState) => number[];
 declare const _default: import("redux").Reducer<import("redux").CombinedState<{

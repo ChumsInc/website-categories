@@ -1,4 +1,4 @@
-import {ActionInterface, Category, defaultItem, Item} from '../types'
+import {ActionInterface, Category, defaultItem, Item, ItemType} from '../types'
 import {ThunkAction} from "redux-thunk";
 import {RootState} from "../index";
 import {EmptyObject, combineReducers} from "redux";
@@ -20,12 +20,15 @@ export const deleteItemRequested = 'items/deleteItem';
 export const deleteItemSucceeded = 'items/deleteItem-succeeded';
 export const deleteItemFailed = 'items/deleteItem-failed';
 
-export const itemTypes = {
+export type ItemTypeList = {
+    [key in ItemType]: ItemType;
+};
+export const itemTypes:ItemTypeList = {
     product: 'product',
     category: 'category',
     section: 'section',
     link: 'link',
-    other: '',
+    html: 'html',
 };
 
 
@@ -58,23 +61,22 @@ export const defaultItemState:ItemsState = {
 
 export const itemSort = (a:Item, b:Item) => a.priority - b.priority;
 
-export const listSelector = (state:RootState):Item[] => state.items.list;
-export const itemSelector = (id:number) => (state:RootState):Item => {
+export const selectItemList = (state:RootState):Item[] => state.items.list;
+export const selectItemById = (id:number) => (state:RootState):Item => {
     const [item] = state.items.list.filter(i => i.id === id);
     return item || {};
 }
-export const itemListSelector = (state:RootState) => state.items.list;
-export const selectedItemSelector = (state:RootState):Item => state.items.selected;
-export const itemLoadingSelector = (state:RootState) => state.items.loading;
-export const savingSortSelector = (state:RootState) => state.items.savingSort;
-export const savingItemSelector = (state:RootState) => state.items.savingItem;
+export const selectCurrentItem = (state:RootState):Item => state.items.selected;
+export const selectItemsLoading = (state:RootState) => state.items.loading;
+export const selectSortSaving = (state:RootState) => state.items.savingSort;
+export const selectItemSaving = (state:RootState) => state.items.savingItem;
 
 const listReducer = (state:Item[] = [], action:ItemsAction):Item[] => {
     const {type, payload} = action;
     switch (type) {
     case loadCategoriesSucceeded:
         if (payload?.category) {
-            return payload.category.children.sort(itemSort)
+            return (payload.category.children || []).sort(itemSort)
         }
         return state;
     case itemSortSaveSucceeded:
@@ -97,7 +99,7 @@ const listReducer = (state:Item[] = [], action:ItemsAction):Item[] => {
     }
 }
 
-const selectedItemReducer = (state:Item = {...defaultItem}, action:ItemsAction): Item|EmptyObject => {
+const selectedItemReducer = (state:Item = {...defaultItem}, action:ItemsAction): Item => {
     const {type, payload} = action;
     switch (type) {
     case itemSelected:

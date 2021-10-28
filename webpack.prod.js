@@ -4,6 +4,7 @@ const common = require('./webpack.common.js');
 const {WebpackManifestPlugin} = require('webpack-manifest-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const {CleanWebpackPlugin} = require('clean-webpack-plugin');
+const {BundleAnalyzerPlugin} = require('webpack-bundle-analyzer');
 
 
 module.exports = merge(common, {
@@ -31,5 +32,6 @@ module.exports = merge(common, {
     plugins: [
         new CleanWebpackPlugin(),
         new WebpackManifestPlugin(),
-    ]
+        new BundleAnalyzerPlugin(),
+]
 });

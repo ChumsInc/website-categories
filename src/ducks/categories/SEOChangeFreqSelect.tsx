@@ -15,7 +15,7 @@ const SEOChangeFreqSelect: React.FC<SEOChangeFreqSelectProps> = ({value, field, 
         onChange({field, value: ev.target.value})
     }
     return (
-        <Select value={value || ''} onChange={changeHandler} required={required}>
+        <Select value={value || ''} onChange={changeHandler} required={required} bsSize="sm">
             <option>Select One</option>
             <option value="n/a">Not Published</option>
             <option value="always">always</option>

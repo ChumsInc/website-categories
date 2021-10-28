@@ -18,7 +18,7 @@ declare const rootReducer: import("redux").Reducer<import("redux").CombinedState
     }>;
     items: import("redux").CombinedState<{
         list: import("./types").Item[];
-        selected: never;
+        selected: import("./types").Item;
         loading: boolean;
         savingItem: boolean;
         savingSort: boolean;

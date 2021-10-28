@@ -6,16 +6,17 @@ import {Alert} from "chums-ducks/dist/ducks";
 import {FieldInput, FieldTextArea, FormColumn, Progress, ProgressBar} from "chums-ducks/dist/components";
 import CategorySelect from "./CategorySelect";
 import AlertExistingKeyword from "../keywords/AlertExistingKeyword";
-import {childCategoriesSelector, loadingSelector, selectedCategorySelector} from "./index";
+import {childCategoriesSelector, selectCategoriesLoading, selectCurrentCategory} from "./index";
 import {currentSiteSelector} from "../sites";
-import {Category, defaultCategory, InputField} from "../types";
+import {CategoryTextFields, defaultCategory, InputField} from "../types";
 import {changeCategoryAction, saveCategoryAction, selectCategoryAction} from "./actions";
 import SEOChangeFreqSelect from "./SEOChangeFreqSelect";
 import SEOPrioritySelect from "./SEOPrioritySelect";
 import {previewURL} from "./utils";
 import {setModalEditorAction} from "../modal-editor";
+import StatusButton from "../../components/StatusButton";
 
-type EditorField = keyof Category;
+type EditorField = keyof CategoryTextFields;
 
 interface CategoryEditorProps {
 
@@ -23,7 +24,7 @@ interface CategoryEditorProps {
 
 const CategoryEditor: React.FC<CategoryEditorProps> = ({}) => {
     const dispatch = useDispatch();
-    const category = useSelector(selectedCategorySelector);
+    const category = useSelector(selectCurrentCategory);
     const {
         id,
         keyword,
@@ -37,14 +38,14 @@ const CategoryEditor: React.FC<CategoryEditorProps> = ({}) => {
         pageText,
         parentId,
         timestamp,
-        children: items,
+        children: items = [],
         changed
     } = category;
     const site = useSelector(currentSiteSelector);
     const disallowedChildIds = useSelector(childCategoriesSelector);
     const [showEditor, setShowEditor] = useState(false);
     const [editorField, setEditorField] = useState('pageText' as EditorField);
-    const loading = useSelector(loadingSelector);
+    const loading = useSelector(selectCategoriesLoading);
 
     const onSubmit = (ev: FormEvent) => {
         ev.preventDefault();
@@ -55,10 +56,9 @@ const CategoryEditor: React.FC<CategoryEditorProps> = ({}) => {
         dispatch(changeCategoryAction({[field]: value}));
     }
 
-    const onSetEnabled = () => changeHandler({field: 'status', value: true});
-    const onSetDisabled = () => changeHandler({field: 'status', value: false});
+    const onChangeStatus = (status:boolean) => changeHandler({field: 'status', value: status});
 
-    const onClickEdit = (field: keyof Category) => {
+    const onClickEdit = (field: keyof CategoryTextFields) => {
         dispatch(setModalEditorAction('Category Text', category[field] || ''));
         setEditorField(field);
         setShowEditor(true);
@@ -73,18 +73,8 @@ const CategoryEditor: React.FC<CategoryEditorProps> = ({}) => {
         setShowEditor(false);
     }
 
-    const btnEnabled = {
-        'btn-success': !!status,
-        'btn-outline-success': !status,
-        'mr-1': true
-    };
-    const btnDisabled = {
-        'btn-danger': !status,
-        'btn-outline-danger': !!status,
-    };
-
     const onNewCategory = () => {
-        dispatch(selectCategoryAction(defaultCategory));
+        dispatch(selectCategoryAction({...defaultCategory}));
     }
 
     const onDeleteCategory = () => {
@@ -97,33 +87,29 @@ const CategoryEditor: React.FC<CategoryEditorProps> = ({}) => {
                 <h4>Edit{' '}
                     {!!keyword && (
                         <small>
-                            (<a href={previewURL(site, keyword)}
+                            (<a href={previewURL(site, category.keyword)}
                                 target="_blank">preview{!status ? ' in dev mode' : ''}</a>)
                         </small>)}
                 </h4>
                 <form onSubmit={onSubmit} className="my-3">
                     <FormColumn label="ID / Keyword" width={8}>
                         <div className="input-group input-group-sm">
-                            <div className="input-group-text">{id || 'new'}</div>
-                            <FieldInput value={keyword || ''} field="keyword" onChange={changeHandler} required/>
+                            <div className="input-group-text">{category.id || 'new'}</div>
+                            <FieldInput value={category.keyword || ''} field="keyword" onChange={changeHandler} required/>
                         </div>
-                        <AlertExistingKeyword keyword={keyword} id={id} pageType="category"/>
+                        <AlertExistingKeyword keyword={category.keyword} id={category.id} pageType="category"/>
                     </FormColumn>
                     <FormColumn width={8} label="Status">
-                        <button type="button" className={classNames('btn btn-sm me-1', btnEnabled)}
-                                onClick={onSetEnabled}>Enabled
-                        </button>
-                        <button type="button" className={classNames('btn btn-sm me-1', btnDisabled)}
-                                onClick={onSetDisabled}>Disabled
-                        </button>
+                        <StatusButton status={!!category.status} onChange={onChangeStatus} />
                     </FormColumn>
                     <FormColumn label="Title" width={8}>
-                        <FieldInput value={title} field="title" onChange={changeHandler}
+                        <FieldInput value={category.title} field="title" onChange={changeHandler}
                                     placeholder="Title" required/>
                     </FormColumn>
                     <FormColumn width={8} label="Parent Category">
-                        <CategorySelect value={parentId === null ? '' : parentId} required={true}
-                                        disallow={disallowedChildIds} onChange={(ev) => changeHandler({
+                        <CategorySelect value={category.parentId === null ? '' : category.parentId} required={true}
+                                        disallow={disallowedChildIds}
+                                        onChange={(ev) => changeHandler({
                             field: 'parentId',
                             value: Number(ev.target.value)
                         })}/>
@@ -170,7 +156,7 @@ const CategoryEditor: React.FC<CategoryEditorProps> = ({}) => {
                             </div>
                         </div>
                     </FormColumn>
-                    <FormColumn width={8} label={' '}>
+                    <FormColumn width={8} label={' '} className="mt-3">
                         <button type="submit" className="btn btn-sm btn-primary me-1"
                                 title={'last saved: ' + timestamp}>
                             Save
@@ -181,7 +167,7 @@ const CategoryEditor: React.FC<CategoryEditorProps> = ({}) => {
                         </button>
                         <button type="button" className="btn btn-sm btn-outline-danger me-1"
                                 onClick={onDeleteCategory}
-                                disabled={true || !id || items.length > 0}>
+                                disabled={!id || items.length > 0}>
                             Delete
                         </button>
                     </FormColumn>
@@ -189,7 +175,7 @@ const CategoryEditor: React.FC<CategoryEditorProps> = ({}) => {
                 </form>
                 {loading && <Progress><ProgressBar striped/></Progress>}
             </div>
-            {showEditor && <ModalEditor title={`Edit '${editorField}'`} content={category[editorField] || ''}
+            {showEditor && <ModalEditor title={`Edit '${editorField}'`} content={String(category[editorField]) || ''}
                                         onClose={onCloseEditor} onCancel={onCancelEditor}/>}
         </Fragment>
     )

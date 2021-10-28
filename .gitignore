@@ -3,3 +3,6 @@
 /node_modules/
 /public/**/.sass-cache/
 /public/js
+/dist
+/src/**/*.css
+/src/**/*.css.map

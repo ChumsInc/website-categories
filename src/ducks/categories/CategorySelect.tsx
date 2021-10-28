@@ -2,7 +2,7 @@ import React, {ChangeEvent} from 'react';
 import {useSelector} from 'react-redux';
 import {Select} from "chums-ducks/dist/components";
 import classNames from 'classnames';
-import {listSelector, categorySorter, selectedCategorySelector} from "./index";
+import {selectCategoryList, categorySorter, selectCurrentCategory} from "./index";
 
 const keywordSortProps = {field: 'keyword', ascending: true};
 const keywordSort = categorySorter(keywordSortProps);
@@ -16,9 +16,9 @@ export interface CategorySelectProps {
 }
 
 const CategorySelect: React.FC<CategorySelectProps> = ({value, disallow = [], required, disabled, onChange}) => {
-    const categories = useSelector(listSelector(keywordSortProps));
+    const categories = useSelector(selectCategoryList(keywordSortProps));
     return (
-        <Select value={value} onChange={onChange} required={required} disabled={disabled}>
+        <Select value={value} onChange={onChange} required={required} disabled={disabled} bsSize="sm">
             <option value="">Select One</option>
             <option value={0}>-- none --</option>
             {categories

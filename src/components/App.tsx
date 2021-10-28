@@ -1,16 +1,16 @@
-import React, {Component, useEffect} from 'react';
+import React from 'react';
 import {useSelector} from 'react-redux';
 import {AlertList} from "chums-ducks/dist/ducks";
-import CategoryList from "./ducks/categories/CategoryList";
-import CategoryEditor from "./ducks/categories/CategoryEditor";
-import AppTabs, {TABS, TAB_KEY} from "./components/AppTabs";
-import {selectedTabSelector} from "./ducks/tabs";
-import CategoryItemList from "./ducks/items/CategoryItemList";
-import ItemEditor from "./ducks/items/ItemEditor";
+import CategoryList from "../ducks/categories/CategoryList";
+import CategoryEditor from "../ducks/categories/CategoryEditor";
+import AppTabs, {categoryTabID, categoryTabKey} from "./AppTabs";
+import {selectCurrentTab} from "chums-ducks";
+import CategoryItemList from "../ducks/items/CategoryItemList";
+import ItemEditor from "../ducks/items/ItemEditor";
 import {ErrorBoundary} from "chums-ducks/dist/components";
 
 const App: React.FC = () => {
-    const tab = useSelector(selectedTabSelector(TAB_KEY));
+    const tab = useSelector(selectCurrentTab(categoryTabKey));
     return (
         <div>
             <AlertList/>
@@ -21,14 +21,14 @@ const App: React.FC = () => {
                 <div className="col-4">
                     <AppTabs/>
                     <ErrorBoundary>
-                        {tab === TABS.edit && <CategoryEditor/>}
-                        {tab === TABS.items && <CategoryItemList/>}
+                        {tab === categoryTabID.edit && <CategoryEditor/>}
+                        {tab === categoryTabID.items && <CategoryItemList/>}
                     </ErrorBoundary>
                 </div>
                 <div className="col-4">
                     <div className="sticky-50">
                         <ErrorBoundary>
-                            <ItemEditor />
+                            <ItemEditor/>
                         </ErrorBoundary>
                     </div>
                 </div>

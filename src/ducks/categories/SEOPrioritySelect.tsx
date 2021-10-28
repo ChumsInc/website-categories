@@ -14,7 +14,7 @@ const SEOPrioritySelect: React.FC<SEOPrioritySelectProps> = ({value, field, requ
         onChange({field, value: Number(ev.target.value)})
     }
     return (
-        <Select value={value || ''} onChange={changeHandler} required={required}>
+        <Select value={value || ''} onChange={changeHandler} required={required} bsSize="sm">
             <option>Select One</option>
             <option value={0.0}>0.0</option>
             <option value={0.1}>0.1</option>
