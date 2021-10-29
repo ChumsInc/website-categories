@@ -104,6 +104,7 @@ const selectedItemReducer = (state:Item = {...defaultItem}, action:ItemsAction):
     switch (type) {
     case itemSelected:
     case loadItemSucceeded:
+    case saveItemSucceeded:
         return payload?.item || {...defaultItem};
     case itemSortSaveSucceeded:
         if (state.id && payload?.list) {

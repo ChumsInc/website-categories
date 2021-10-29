@@ -15,7 +15,7 @@ $bodyPath = "apps/website-categories";
 $title = "Website Categories";
 $description = "";
 
-$ui = new WebUI($bodyPath, $title, $description, true, true);
+$ui = new WebUI($bodyPath, $title, $description, true, 5);
 $ui->version = "2019-03-07";
 $ui->bodyClassName = 'container-fluid';
 $ui->AddCSS("public/css/styles.css");
