@@ -37,18 +37,18 @@ const ItemCard:React.FC<ItemCardProps> = ({item, index, moveItem}) => {
     const selected = useSelector(selectCurrentItem);
     const site = useSelector(currentSiteSelector);
 
-    const [{handlerId}, drop] = useDrop({
+    const [collectedProps, drop] = useDrop({
         accept: 'item',
         collect(monitor) {
             return {
                 handlerId: monitor.getHandlerId(),
             }
         },
-        hover(item: DragItem, monitor:DropTargetMonitor) {
+        hover(item: unknown, monitor:DropTargetMonitor) {
             if (!ref.current) {
                 return;
             }
-            const dragIndex = item.index;
+            const dragIndex = (item as DragItem).index;
             const hoverIndex = index;
             if (dragIndex === hoverIndex) {
                 return;
@@ -65,7 +65,7 @@ const ItemCard:React.FC<ItemCardProps> = ({item, index, moveItem}) => {
             }
 
             moveItem(dragIndex, hoverIndex);
-            item.index = hoverIndex;
+            (item as DragItem).index = hoverIndex;
         },
     });
 
@@ -103,7 +103,7 @@ const ItemCard:React.FC<ItemCardProps> = ({item, index, moveItem}) => {
     };
 
     return (
-        <div ref={ref} style={{...style, opacity}} data-handler-id={handlerId}
+        <div ref={ref} style={{...style, opacity}}
              className={classNames("sortable-item", className)}>
             <button type="button"  onClick={onClick}
                     className={classNames("btn btn-sm mb-1 sortable-item--edit-button", btnClassName)}>
