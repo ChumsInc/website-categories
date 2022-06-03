@@ -13,7 +13,7 @@ import {
     tableAddedAction
 } from "chums-ducks/dist/ducks";
 import {Category} from "../types";
-import {loadKeywords} from "../keywords";
+import {loadKeywordsAction} from "../keywords";
 import {ErrorBoundary} from "chums-ducks/dist/components";
 
 
@@ -35,7 +35,7 @@ const CategoryList: React.FC = () => {
     const dispatch = useDispatch();
     useEffect(() => {
         dispatch(loadCategoriesAction());
-        dispatch(loadKeywords());
+        dispatch(loadKeywordsAction());
         dispatch(addPageSetAction({key: TABLE}));
         dispatch(tableAddedAction({key: TABLE, field: 'keyword', ascending: true}));
     }, []);

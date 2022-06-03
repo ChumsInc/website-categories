@@ -1,6 +1,8 @@
 import React, {ChangeEvent} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import {sites, siteSelectedAction, currentSiteSelector} from './index';
+import {loadCategoriesAction} from "../categories/actions";
+import {loadKeywordsAction} from "../keywords";
 
 const SiteSelect: React.FC = () => {
     const dispatch = useDispatch();
@@ -8,6 +10,8 @@ const SiteSelect: React.FC = () => {
         const {value} = ev.target;
         const [site] = sites.filter(s => s.name === value);
         dispatch(siteSelectedAction(site));
+        dispatch(loadCategoriesAction());
+        dispatch(loadKeywordsAction());
     }
     const site = useSelector(currentSiteSelector);
 

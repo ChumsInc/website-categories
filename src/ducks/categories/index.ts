@@ -2,7 +2,7 @@ import {Action, AnyAction, combineReducers} from "redux";
 import {ActionInterface, Category, defaultCategory, Keyword, SorterProps} from "../types";
 import {ThunkAction} from "redux-thunk";
 import {RootState} from "../index";
-import {AlertAction, pagedDataSelector, sortableTableSelector} from "chums-ducks";
+import {ActionPayload, AlertAction, pagedDataSelector, sortableTableSelector} from "chums-ducks";
 import {calcChildIds, calcParentIds} from "./utils";
 
 export const showInactiveToggled = 'categories/showInactiveToggled';
@@ -19,15 +19,15 @@ export const saveCategoryFailed = 'categories/save-failed';
 
 export type CategorySortField = 'id' | 'keyword' | 'title' | 'parentId' | 'changefreq';
 
+export interface CategoryPayload extends ActionPayload {
+    list?: Category[],
+    category?: Category,
+    filter?: string,
+    sort?: string,
+    change?: object
+}
 export interface CategoryAction extends ActionInterface {
-    payload?: {
-        list?: Category[],
-        category?: Category,
-        filter?: string,
-        sort?: string,
-        error?: Error,
-        change?: object
-    }
+    payload?: CategoryPayload
 }
 
 export const defaultCategorySort:SorterProps = {field: 'keyword', ascending: true};

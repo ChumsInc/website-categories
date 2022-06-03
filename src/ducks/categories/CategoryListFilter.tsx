@@ -5,6 +5,7 @@ import {useDispatch, useSelector} from "react-redux";
 import {selectCategoryFilter, selectCategoriesLoading, selectShowInactive,} from "./index";
 import {loadCategoriesAction, setFilter, toggleShowInactiveAction} from "./actions";
 import {SpinnerButton, ToggleButton} from "chums-ducks";
+import {loadKeywordsAction} from "../keywords";
 
 const CategoryListFilter: React.FC = () => {
     const dispatch = useDispatch();
@@ -20,6 +21,10 @@ const CategoryListFilter: React.FC = () => {
         dispatch(setFilter(ev.target.value));
     }
 
+    const onReload = () => {
+        dispatch(loadCategoriesAction());
+        dispatch(loadKeywordsAction())
+    }
     return (
         <div className="row g-3 align-items-baseline">
             <div className="col-auto">
@@ -37,7 +42,8 @@ const CategoryListFilter: React.FC = () => {
             </div>
             <div className="col-auto">
                 <SpinnerButton type="button" size="sm" color="primary" spinning={loading}
-                               onClick={() => dispatch(loadCategoriesAction())}>Reload
+                               onClick={onReload}>
+                    Reload
                 </SpinnerButton>
             </div>
         </div>
