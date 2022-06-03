@@ -36,7 +36,7 @@ const keywordURL = (site: Site) => {
     }
 }
 
-export const loadKeywords = (): KeywordThunkAction => async (dispatch, getState) => {
+export const loadKeywordsAction = (): KeywordThunkAction => async (dispatch, getState) => {
     try {
         const {sites} = getState();
         dispatch({type: keywordsLoading});
