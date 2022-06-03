@@ -155,7 +155,7 @@ const ItemEditor: React.FC = () => {
                         </FormColumn>
                     )}
                     {itemType === itemTypes.category && (
-                        <InactiveKeywordAlert id={item.categoriesId} itemType={itemType}/>
+                        <InactiveKeywordAlert keyword={item.category?.keyword}itemType={itemType}/>
                     )}
                     {itemType !== itemTypes.section && itemType !== itemTypes.html && (
                         <FormColumn width={8} label="Description">
