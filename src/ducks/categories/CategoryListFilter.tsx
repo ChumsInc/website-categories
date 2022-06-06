@@ -32,12 +32,12 @@ const CategoryListFilter: React.FC = () => {
             </div>
             <div className="col-auto">
                 <ToggleButton id="category-list--filter-inactive" size="sm"
-                              color="secondary" checked={showInactive} onClick={onToggleShowInactive}>
+                              color="warning" checked={showInactive} onClick={onToggleShowInactive}>
                     Show Inactive
                 </ToggleButton>
             </div>
             <div className="col-auto">
-                <Input value={filter || ''} onChange={onChangeFilter} type="search"
+                <Input value={filter || ''} onChange={onChangeFilter} type="search" bsSize="sm"
                        placeholder="Filter Categories"/>
             </div>
             <div className="col-auto">
@@ -50,4 +50,4 @@ const CategoryListFilter: React.FC = () => {
     )
 }
 
-export default CategoryListFilter;
+export default React.memo(CategoryListFilter);

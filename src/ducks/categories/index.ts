@@ -2,8 +2,17 @@ import {Action, AnyAction, combineReducers} from "redux";
 import {ActionInterface, Category, defaultCategory, Keyword, SorterProps} from "../types";
 import {ThunkAction} from "redux-thunk";
 import {RootState} from "../index";
-import {ActionPayload, AlertAction, pagedDataSelector, sortableTableSelector} from "chums-ducks";
+import {
+    ActionPayload,
+    AlertAction, filterPage,
+    pagedDataSelector,
+    selectCurrentPage,
+    selectRowsPerPage,
+    sortableTableSelector
+} from "chums-ducks";
 import {calcChildIds, calcParentIds} from "./utils";
+import {selectTableSort, SortableTableField} from "chums-ducks/dist/ducks";
+import {createSelector} from "reselect";
 
 export const showInactiveToggled = 'categories/showInactiveToggled';
 export const categoryFilterChanged = 'categories/categoryFilterChanged';
@@ -17,7 +26,14 @@ export const saveCategory = 'categories/save-requested';
 export const saveCategorySucceeded = 'categories/save-succeeded';
 export const saveCategoryFailed = 'categories/save-failed';
 
+export const TABLE_KEY = 'categories';
+
 export type CategorySortField = 'id' | 'keyword' | 'title' | 'parentId' | 'changefreq';
+export type SortableCategoryField = keyof Omit<Category, 'lifestyle'|'changed'|'css'|'children'|'status'>;
+
+export interface CategoryListSortableField extends SortableTableField {
+    field: SortableCategoryField
+}
 
 export interface CategoryPayload extends ActionPayload {
     list?: Category[],
@@ -29,8 +45,10 @@ export interface CategoryPayload extends ActionPayload {
 export interface CategoryAction extends ActionInterface {
     payload?: CategoryPayload
 }
-
-export const defaultCategorySort:SorterProps = {field: 'keyword', ascending: true};
+export interface CategorySorterProps extends SorterProps {
+    field: SortableCategoryField
+}
+export const defaultCategorySort:CategorySorterProps = {field: 'keyword', ascending: true};
 
 export interface CategoryThunkAction extends ThunkAction<any, RootState, unknown, CategoryAction | AlertAction> {
 }
@@ -42,15 +60,23 @@ export const categoriesURL = (site:string) => {
     }
 }
 
-export const categorySorter = ({field, ascending}: SorterProps) => (a: any, b: any) => {
-    if (field in a && field in b) {
+export const categorySorter = ({field, ascending}: CategorySorterProps) => (a: Category, b: Category) => {
+    console.log('categorySorter', field, ascending);
+    const ascMod = ascending ? 1 : -1;
+    switch (field) {
+    case "id":
+    case 'priority':
+    case "parentId":
+        return (a[field] - b[field]) * ascMod;
+    case 'timestamp':
+
+    default:
         return (
             a[field] === b[field]
                 ? (a.keyword > b.keyword ? 1 : -1)
                 : a[field] > b[field] ? 1 : -1
-        ) * (ascending ? 1 : -1);
+        ) * ascMod;
     }
-    return 0;
 }
 
 export const selectShowInactive = (state: RootState):boolean => state.categories.showInactive;
@@ -59,35 +85,47 @@ export const selectCategoryFilter = (state: RootState) => state.categories.filte
 
 export const selectCategoriesLoading = (state: RootState) => state.categories.loading;
 
-export const selectCategoryList = (sort:SorterProps) => (state: RootState):Category[] => {
-    return state.categories.list.sort(categorySorter(sort));
-}
+export const selectCategoryList = (state:RootState) => state.categories.list;
 
-export const selectFilteredList = (sort: SorterProps) => (state: RootState):Category[] => {
-    const {showInactive, filter, list} = state.categories;
-    let filterRegex = /^/;
-    let filterIDRegex = /^/;
-    try {
-        filterRegex = new RegExp(filter);
-        filterIDRegex = new RegExp(`^${filter}$`)
-    } catch (err) {
-    }
+export const selectCategoryListCount = createSelector(
+    [selectCategoryList, selectCategoryFilter, selectShowInactive], (list, filter, showInactive) => {
+        let filterRegex = /^/;
+        let filterIDRegex = /^/;
+        try {
+            filterRegex = new RegExp(filter);
+            filterIDRegex = new RegExp(`^${filter}$`)
+        } catch (err) {
+        }
 
-    return list.filter(category => showInactive || !!category.status)
-        .filter(category => !filter
-            || filterRegex.test(category.keyword)
-            || filterRegex.test(category.title)
-            || filterIDRegex.test(String(category.id))
-            || filterIDRegex.test(String(category.parentId))
-        )
-        .sort(categorySorter(sort));
-}
+        return list.filter(category => showInactive || !!category.status)
+            .filter(category => !filter
+                || filterRegex.test(category.keyword)
+                || filterRegex.test(category.title)
+                || filterIDRegex.test(String(category.id))
+                || filterIDRegex.test(String(category.parentId))
+            ).length;
+    })
 
-export const pagedFilteredListSelector = (tableKey: string) => (state:RootState):Category[] => {
-    const {field, ascending} = sortableTableSelector(tableKey)(state);
-    const list = selectFilteredList({field, ascending})(state);
-    return pagedDataSelector(tableKey, list)(state);
-}
+export const selectFilteredList = createSelector(
+    [selectCategoryList, selectCategoryFilter, selectShowInactive, selectTableSort(TABLE_KEY), selectCurrentPage(TABLE_KEY), selectRowsPerPage(TABLE_KEY)],
+    (list, filter, showInactive, sort, page, rowsPerPage) => {
+        let filterRegex = /^/;
+        let filterIDRegex = /^/;
+        try {
+            filterRegex = new RegExp(filter);
+            filterIDRegex = new RegExp(`^${filter}$`)
+        } catch (err) {
+        }
+
+        return list.filter(category => showInactive || !!category.status)
+            .filter(category => !filter
+                || filterRegex.test(category.keyword)
+                || filterRegex.test(category.title)
+                || filterIDRegex.test(String(category.id))
+                || filterIDRegex.test(String(category.parentId))
+            ).sort(categorySorter(sort as CategorySorterProps))
+            .filter(filterPage(page, rowsPerPage));
+})
 
 export const selectCurrentCategory = (state:RootState):Category => state.categories.selected;
 
