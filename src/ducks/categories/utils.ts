@@ -28,10 +28,6 @@ export const calcParentIds = (categories: ProductCategory[], parentId?: number):
 };
 
 
-export const getParentIds = (categories: ProductCategory[], parentId: number = 0): number[] => {
-    return calcParentIds(categories, parentId).filter(id => id !== parentId);
-};
-
 export const categorySorter = ({
                                    field,
                                    ascending

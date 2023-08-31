@@ -30,42 +30,7 @@
     align-content: flex-start;
   }
 
-  .products-list {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    margin-top: 1rem;
 
-    .product {
-      padding: 0.25rem;
-      flex: 0 1 33.333%;
-      color: lightgray;
-      font-size: .875rem;
-
-
-      &.active {
-        color: black;
-      }
-
-      .product-stuff {
-        padding: 0.25rem;
-        border: 1px lightgray solid;
-        border-radius: 3px;
-        display: flex;
-        flex-direction: row;
-
-        .img-container {
-          flex: 1 0 50%;
-        }
-        .info-container {
-          flex: 1 0 50%;
-          padding-left: 0.25rem;
-        }
-      }
-
-    }
-  }
 
 
   .btn-group {

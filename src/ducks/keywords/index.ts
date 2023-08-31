@@ -68,7 +68,7 @@ const keywordsReducer = createReducer(initialState, builder => {
             state.loading = false;
             state.list = action.payload.sort((a, b) => a.id - b.id);
         })
-        .addCase(loadKeywords.rejected, (state, action) => {
+        .addCase(loadKeywords.rejected, (state) => {
             state.loading = false;
         })
 })

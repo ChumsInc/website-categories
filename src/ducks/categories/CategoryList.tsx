@@ -1,13 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {useSelector} from 'react-redux';
 import CategoryListFilter from "./CategoryListFilter";
-import {
-    selectCategoriesLoading,
-    selectCategoryFilter,
-    selectCategorySort,
-    selectCurrentCategory,
-    selectFilteredList,
-} from "./selectors";
+import {selectCategoryFilter, selectCategorySort, selectCurrentCategory, selectFilteredList,} from "./selectors";
 import {loadCategories, loadCategory, setCategoriesSort} from "./actions";
 import {loadKeywords} from "../keywords";
 import {ErrorBoundary} from "react-error-boundary";
@@ -16,7 +10,6 @@ import ErrorFallbackComponent from "../../components/ErrorFallbackComponent";
 import {useAppDispatch} from "../../app/configureStore";
 import {ProductCategory} from "b2b-types";
 import {SortableTable, SortableTableField, TablePagination} from "chums-components";
-import LoadingProgress from "chums-components/dist/LoadingProgressBar";
 
 
 const Title: React.FC<{ title: string }> = ({title}) => (<span dangerouslySetInnerHTML={{__html: title}}/>)
@@ -33,14 +26,13 @@ const fields: SortableTableField<ProductCategory>[] = [
     }
 ];
 
-const rowClassName = (row:ProductCategory) => ({'table-warning': !row.status})
+const rowClassName = (row: ProductCategory) => ({'table-warning': !row.status})
 
 const CategoryList: React.FC = () => {
     const dispatch = useAppDispatch();
     const list = useSelector(selectFilteredList);
     const current = useSelector(selectCurrentCategory);
     const filter = useSelector(selectCategoryFilter);
-    const loading = useSelector(selectCategoriesLoading);
     const sort = useSelector(selectCategorySort);
 
     const [page, setPage] = useState(0);

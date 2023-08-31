@@ -24,36 +24,6 @@
   align-items: flex-start;
   align-content: flex-start;
 }
-#app .products-list {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  margin-top: 1rem;
-}
-#app .products-list .product {
-  padding: 0.25rem;
-  flex: 0 1 33.333%;
-  color: lightgray;
-  font-size: 0.875rem;
-}
-#app .products-list .product.active {
-  color: black;
-}
-#app .products-list .product .product-stuff {
-  padding: 0.25rem;
-  border: 1px lightgray solid;
-  border-radius: 3px;
-  display: flex;
-  flex-direction: row;
-}
-#app .products-list .product .product-stuff .img-container {
-  flex: 1 0 50%;
-}
-#app .products-list .product .product-stuff .info-container {
-  flex: 1 0 50%;
-  padding-left: 0.25rem;
-}
 #app .btn-group.item-types .btn-secondary,
 #app .btn-group.item-types .btn-outline-secondary:hover {
   color: black;

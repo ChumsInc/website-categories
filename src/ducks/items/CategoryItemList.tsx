@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
-import {useDispatch, useSelector} from 'react-redux';
+import {useSelector} from 'react-redux';
 import {itemSortPriority} from '../../utils';
-import {selectItemsLoading, selectItemList, selectSortSaving} from "./selectors";
+import {selectItemList, selectItemsLoading, selectSortSaving} from "./selectors";
 import ItemCard from "./ItemCard";
 import {saveItemSort} from "./actions";
 import {Progress, ProgressBar} from "chums-components";
@@ -9,7 +9,6 @@ import {HTML5Backend} from "react-dnd-html5-backend";
 import {DndProvider} from "react-dnd";
 import {useAppDispatch} from "../../app/configureStore";
 import {selectCategoriesLoading, selectCurrentCategory} from "../categories/selectors";
-import {ProductCategoryChild} from "b2b-types";
 import {CategoryItem} from "../types";
 
 const CategoryItemList = () => {
@@ -74,9 +73,9 @@ const CategoryItemList = () => {
             <DndProvider backend={HTML5Backend}>
                 <div className="sortable-item-list">
                     {items.map((item, index) => (
-                                <ItemCard key={item.id} index={index} item={item} moveItem={onMoveItem}/>
-                            )
-                        )}
+                            <ItemCard key={item.id} index={index} item={item} moveItem={onMoveItem}/>
+                        )
+                    )}
                 </div>
             </DndProvider>
         </div>

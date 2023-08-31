@@ -1,11 +1,7 @@
 import {CategoryItem, EditableCategoryItem, ItemType} from '../types'
-import {Editable, ProductCategoryChild} from "b2b-types";
 import {createReducer} from "@reduxjs/toolkit";
 import {loadCategory} from "../categories/actions";
 import {deleteCurrentItem, saveCurrentItem, saveItemSort, setCurrentItem, updateCurrentItem} from "./actions";
-import {CategoryChildLink, CategoryChildSection} from "b2b-types/src/products";
-
-
 
 
 export interface ItemsState {
@@ -47,13 +43,16 @@ export const itemSort = (a: CategoryItem, b: CategoryItem) => a.priority - b.pri
 const itemsReducer = createReducer(defaultItemState, builder => {
     builder
         .addCase(loadCategory.pending, (state, action) => {
-            if (!state.current.item || state.current.item.id !== action.meta.arg.id) {
+            if (!state.current.item || state.current.item.parentId !== action.meta.arg.id) {
                 state.list = [];
+                state.current.item = null;
             }
         })
         .addCase(loadCategory.fulfilled, (state, action) => {
             if (action.payload) {
                 state.list = [...action.payload.children].sort(itemSort);
+                const [item] = action.payload.children.filter(item => item.id === state.current.item?.id);
+                state.current.item = item ?? null;
             }
         })
         .addCase(setCurrentItem.pending, (state, action) => {
@@ -74,7 +73,7 @@ const itemsReducer = createReducer(defaultItemState, builder => {
             state.current.item = action.payload;
             state.current.saving = false;
         })
-        .addCase(saveCurrentItem.rejected, (state, action) => {
+        .addCase(saveCurrentItem.rejected, (state) => {
             state.current.saving = false;
         })
         .addCase(deleteCurrentItem.pending, (state) => {

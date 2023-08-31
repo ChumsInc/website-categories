@@ -35,7 +35,7 @@ const ItemCard = ({item, index, moveItem}: ItemCardProps) => {
     const ref = useRef<HTMLDivElement>(null);
     const current = useSelector(selectCurrentItem);
 
-    const [collectedProps, drop] = useDrop({
+    const [, drop] = useDrop({
         accept: 'item',
         collect(monitor) {
             return {

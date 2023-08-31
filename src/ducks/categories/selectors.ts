@@ -8,24 +8,6 @@ export const selectCategoriesLoading = (state: RootState) => state.categories.lo
 export const selectCategoryList = (state: RootState) => state.categories.list;
 export const selectCategorySort = (state: RootState) => state.categories.sort;
 
-export const selectCategoryListCount = createSelector(
-    [selectCategoryList, selectCategoryFilter, selectShowInactive], (list, filter, showInactive) => {
-        let filterRegex = /^/;
-        let filterIDRegex = /^/;
-        try {
-            filterRegex = new RegExp(filter);
-            filterIDRegex = new RegExp(`^${filter}$`)
-        } catch (err) {
-        }
-
-        return list.filter(category => showInactive || !!category.status)
-            .filter(category => !filter
-                || filterRegex.test(category.keyword)
-                || filterRegex.test(category.title)
-                || filterIDRegex.test(String(category.id))
-                || filterIDRegex.test(String(category.parentId))
-            ).length;
-    })
 
 export const selectFilteredList = createSelector(
     [selectCategoryList, selectCategoryFilter, selectShowInactive, selectCategorySort],

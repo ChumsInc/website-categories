@@ -15,14 +15,14 @@
 }
 .sortable-item.inactive {
   color: grey;
-  background-color: gray;
+  background-color: grey;
   border-color: red;
 }
 .sortable-item.inactive img {
   filter: grayscale(50%) brightness(80%);
 }
 .sortable-item.inactive a {
-  color: gray;
+  color: grey;
 }
 .sortable-item.section {
   background-color: lightcyan;

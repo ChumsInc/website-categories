@@ -13,6 +13,7 @@
   .btn-light {
     border-color: grey;
   }
+
   &.inactive {
     color: black;
     background-color: lighten(black, 50%);
@@ -55,3 +56,5 @@
     padding: 0.5rem;
   }
 }
+
+

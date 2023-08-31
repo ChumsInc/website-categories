@@ -48,15 +48,6 @@ const ItemEditor = () => {
         }
     }
 
-    const selectChangeHandler = (field: keyof CategoryItem) => (ev: ChangeEvent<HTMLSelectElement>) => {
-        switch (field) {
-            case 'categoriesId':
-            case 'productsId':
-                dispatch(updateCurrentItem({[field]: +ev.target.value}));
-                return;
-
-        }
-    }
     const textareaChangeHandler = (field: keyof CategoryItem) => (ev: ChangeEvent<HTMLTextAreaElement>) => {
         switch (field) {
             case 'description':
@@ -116,9 +107,7 @@ const ItemEditor = () => {
 
 
     if (!category?.id) {
-        return (
-            <Alert color="info">Please select (or save) a category first.</Alert>
-        )
+        return null;
     }
 
     if (!item) {
