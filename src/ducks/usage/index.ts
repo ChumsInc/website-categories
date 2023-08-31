@@ -20,9 +20,19 @@ export interface ProductUsage {
     products_status: boolean;
 }
 
+export interface MenuUsage {
+    menu_id: number;
+    title: string;
+    menu_status: boolean;
+    item_title: string;
+    url: string;
+    item_status: boolean;
+}
+
 export interface KeywordUsage {
     products: ProductUsage[];
     categories: CategoryUsage[];
+    menus: MenuUsage[];
     loading: boolean;
     timestamp: number;
 }
@@ -30,6 +40,7 @@ export interface KeywordUsage {
 export interface UsageResponse {
     products: ProductUsage[];
     categories: CategoryUsage[];
+    menus:MenuUsage[];
     timestamp?: number;
 }
 
@@ -74,6 +85,7 @@ const usageReducer = createReducer(initialState, builder => {
                 state.keywords[action.meta.arg!] = {
                     products: [],
                     categories: [],
+                    menus: [],
                     loading: true,
                     timestamp: 0,
                 }
@@ -84,6 +96,7 @@ const usageReducer = createReducer(initialState, builder => {
             state.keywords[action.meta.arg!] = {
                 products: action.payload.products ?? [],
                 categories: action.payload.categories ?? [],
+                menus: action.payload.menus ?? [],
                 loading: false,
                 timestamp: action.payload.timestamp ?? 0,
             }

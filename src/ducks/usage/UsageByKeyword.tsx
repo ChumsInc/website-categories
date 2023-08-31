@@ -26,7 +26,7 @@ const UsageByKeyword = ({keyword}:{keyword?:string}) => {
             </thead>
             <tbody>
             {usage?.products.map(row => (
-                <tr key={row.categorypage_id}>
+                <tr key={`products-${row.categorypage_id}`}>
                     <td>{row.categorypage_id}</td>
                     <td>{row.page_keyword}</td>
                     <td>{row.page_title}</td>
@@ -37,11 +37,22 @@ const UsageByKeyword = ({keyword}:{keyword?:string}) => {
                 </tr>
             ))}
             {usage?.categories.map(row => (
-                <tr key={row.categorypage_id}>
+                <tr key={`categories-${row.categorypage_id}`}>
                     <td>{row.categorypage_id}</td>
                     <td>{row.page_keyword}</td>
                     <td>{row.page_title}</td>
                     <td>{row.item_title}</td>
+                    <td className="text-center">{row.item_status ? <span className="bi-check-square"/> : <span className="bi-square" /> }</td>
+                    <td />
+                    <td />
+                </tr>
+            ))}
+            {usage?.menus.map(row => (
+                <tr key={`menu-${row.menu_id}`}>
+                    <td>{row.menu_id}</td>
+                    <td>{row.title}</td>
+                    <td>{row.item_title}</td>
+                    <td>{row.url}</td>
                     <td className="text-center">{row.item_status ? <span className="bi-check-square"/> : <span className="bi-square" /> }</td>
                     <td />
                     <td />
