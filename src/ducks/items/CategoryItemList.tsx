@@ -1,25 +1,30 @@
 import React, {useEffect, useState} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import {itemSortPriority} from '../../utils';
-import {selectItemsLoading, selectItemList, selectSortSaving} from "./index";
+import {selectItemsLoading, selectItemList, selectSortSaving} from "./selectors";
 import ItemCard from "./ItemCard";
-import {saveItemSortAction} from "./actions";
-import {selectCategoriesLoading} from "../categories";
-import {Progress, ProgressBar} from "chums-ducks/dist/components";
+import {saveItemSort} from "./actions";
+import {Progress, ProgressBar} from "chums-components";
 import {HTML5Backend} from "react-dnd-html5-backend";
 import {DndProvider} from "react-dnd";
+import {useAppDispatch} from "../../app/configureStore";
+import {selectCategoriesLoading, selectCurrentCategory} from "../categories/selectors";
+import {ProductCategoryChild} from "b2b-types";
+import {CategoryItem} from "../types";
 
-const CategoryItemList: React.FC = () => {
-    const dispatch = useDispatch();
+const CategoryItemList = () => {
+    const dispatch = useAppDispatch();
     const list = useSelector(selectItemList);
+    const current = useSelector(selectCurrentCategory);
     const loadingCategory = useSelector(selectCategoriesLoading);
     const loadingItems = useSelector(selectItemsLoading);
     const saving = useSelector(selectSortSaving);
     const loading = loadingCategory || loadingItems || saving;
 
-    const [items, setItems] = useState(list);
+    const [items, setItems] = useState<CategoryItem[]>([...list].sort(itemSortPriority));
+
     useEffect(() => {
-        setItems(list);
+        setItems([...list].sort(itemSortPriority));
     }, [list]);
 
     const onMoveItem = (dragIndex: number, hoverIndex: number) => {
@@ -35,7 +40,19 @@ const CategoryItemList: React.FC = () => {
         setItems(sorted);
     }
 
-    const onSave = () => dispatch(saveItemSortAction(items));
+    const onSave = () => {
+        if (!current) {
+            return;
+        }
+        const saveItems = items.map(item => {
+            return {
+                id: item.id,
+                priority: item.priority,
+            }
+        })
+        dispatch(saveItemSort({parentId: current.id, items: saveItems}));
+    }
+
     return (
         <div>
             <div className="row my-1 align-items-center">
@@ -56,9 +73,7 @@ const CategoryItemList: React.FC = () => {
             <hr/>
             <DndProvider backend={HTML5Backend}>
                 <div className="sortable-item-list">
-                    {items
-                        .sort(itemSortPriority)
-                        .map((item, index) => (
+                    {items.map((item, index) => (
                                 <ItemCard key={item.id} index={index} item={item} moveItem={onMoveItem}/>
                             )
                         )}

@@ -21,6 +21,15 @@
       background-color: lightgray;
     }
   }
+
+  .sortable-item-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    align-content: flex-start;
+  }
+
   .products-list {
     display: flex;
     flex-direction: row;
@@ -58,13 +67,6 @@
     }
   }
 
-  .sortable-item-list {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    align-content: flex-start;
-  }
 
   .btn-group {
     //background-color: green;

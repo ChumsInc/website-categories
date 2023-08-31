@@ -1,15 +1,16 @@
 import React from 'react';
-import {useSelector} from 'react-redux';
-import {Alert} from "chums-ducks/dist/ducks";
-import {keywordSelector} from "./index";
+import {Alert} from "chums-components";
+import {selectKeywordByName} from "./index";
+import {RootState, useAppSelector} from "../../app/configureStore";
 
 export interface AlertExistingKeywordProps {
     keyword: string,
     id: number,
     pageType: string,
 }
-const AlertExistingKeyword:React.FC<AlertExistingKeywordProps> = ({keyword, pageType, id}) => {
-    const [existing] = useSelector(keywordSelector(keyword));
+
+const AlertExistingKeyword = ({keyword, pageType, id}: AlertExistingKeywordProps) => {
+    const existing = useAppSelector((state: RootState) => selectKeywordByName(state, keyword));
     if (!existing) {
         return null;
     }

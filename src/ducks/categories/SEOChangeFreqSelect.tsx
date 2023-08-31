@@ -1,18 +1,16 @@
 import React, {ChangeEvent} from "react";
-import {InputField} from "chums-ducks/dist/types";
-import {Select} from "chums-ducks/dist/components";
+import {Select} from "chums-components";
 
 
 export interface SEOChangeFreqSelectProps {
     value: string,
-    field: string,
     required?: boolean,
-    onChange: ({field, value}: InputField) => void,
+    onChange: (value: string) => void,
 }
 
-const SEOChangeFreqSelect: React.FC<SEOChangeFreqSelectProps> = ({value, field, required = false, onChange}) => {
+const SEOChangeFreqSelect = ({value, required = false, onChange}: SEOChangeFreqSelectProps) => {
     const changeHandler = (ev: ChangeEvent<HTMLSelectElement>) => {
-        onChange({field, value: ev.target.value})
+        onChange(ev.target.value)
     }
     return (
         <Select value={value || ''} onChange={changeHandler} required={required} bsSize="sm">

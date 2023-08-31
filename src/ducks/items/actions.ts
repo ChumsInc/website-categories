@@ -1,197 +1,69 @@
-import {buildPath, fetchDELETE, fetchJSON, fetchPOST} from "chums-ducks";
-import {defaultItem, Item} from "../types";
-import {
-    deleteItemFailed,
-    deleteItemRequested,
-    deleteItemSucceeded,
-    itemChanged,
-    ItemsAction,
-    itemSelected,
-    itemSortSaveFailed,
-    itemSortSaveRequested,
-    itemSortSaveSucceeded,
-    ItemsThunkAction,
-    loadItemFailed,
-    loadItemRequested,
-    loadItemSucceeded,
-    saveItemFailed,
-    saveItemRequested,
-    saveItemSucceeded,
-    selectCurrentItem,
-    selectItemList,
-    selectItemSaving,
-    selectItemsLoading,
-    selectSortSaving
-} from "./index";
-import {selectCategoriesLoading, selectCurrentCategory} from "../categories";
-import {currentSiteSelector} from "../sites";
+import {selectItemSaving, selectItemsLoading, selectSortSaving} from "./selectors";
+import {deleteItem, fetchItem, postItem, postItemSort, PostItemSortArg} from "../../api/items";
+import {createAction, createAsyncThunk} from "@reduxjs/toolkit";
+import {RootState} from "../../app/configureStore";
+import {ProductCategoryChild} from "b2b-types";
+import {CategoryItem} from "../types";
 
-
-interface URLInterface {
-    [site: string]: {
-        fetchItems: string,
-        saveItem: string,
-        saveSort: string,
-        deleteItem: string,
-    }
-}
-
-const URL: URLInterface = {
-    b2b: {
-        fetchItems: '/api/b2b/products/category/:parentId/items/:id(\\d+)?',
-        saveItem: '/api/b2b/products/category/item',
-        saveSort: '/api/b2b/products/category/:parentId(\\d+)/sort',
-        deleteItem: '/api/b2b/products/category/:parentId(\\d+)/item/:id(\\d+)',
+export const setCurrentItem = createAsyncThunk<ProductCategoryChild | null, CategoryItem>(
+    'items/loadCurrent',
+    async (arg) => {
+        if (!arg.id) {
+            return arg as ProductCategoryChild;
+        }
+        return await fetchItem(arg);
     },
-    safety: {
-        fetchItems: '/node-safety/products/category/:parentId/items/:id(\\d+)?',
-        saveItem: '/node-safety/products/category/item',
-        saveSort: '/node-safety/products/category/:parentId(\\d+)/sort',
-        deleteItem: '/node-safety/products/category/item/:id(\\d+)',
-    }
-}
-
-export const categoryItemsURL = (siteName: string) => {
-    switch (siteName) {
-    case 'safety':
-        return '/node-safety/products/category/:parentId/items/:id(\\d+)?';
-    default:
-        return '/api/b2b/products/category/:parentId/items/:id(\\d+)?';
-    }
-}
-
-const saveCategoryItemURL = (siteName: string) => {
-    switch (siteName) {
-    case 'safety':
-        return '/node-safety/products/category/item';
-    default:
-        return '/api/b2b/products/category/item';
-    }
-}
-
-const saveSortItemsURL = (siteName: string) => {
-    switch (siteName) {
-    case 'safety':
-        return '/node-safety/products/category/:parentId(\\d+)/sort';
-    default:
-        return '/api/b2b/products/category/:parentId(\\d+)/sort';
-    }
-}
-
-interface SortItemProps {
-    dragIndex: number,
-    hoverIndex: number
-}
-
-export const selectItemAction = (item: Item): ItemsThunkAction => (dispatch, getState) => {
-    dispatch({type: itemSelected, payload: {item}});
-    dispatch(fetchItemAction(item.id));
-};
-
-export const fetchItemAction = (id: number): ItemsThunkAction => async (dispatch, getState) => {
-    try {
-        if (!id) {
-            return;
-        }
-        const state = getState();
-        const site = currentSiteSelector(state);
-        const category = selectCurrentCategory(state);
-        if (selectCategoriesLoading(state) || selectItemsLoading(state)) {
-            return;
-        }
-        dispatch({type: loadItemRequested});
-        const url = buildPath(URL[site.name].fetchItems, {parentId: category.id, id});
-        const {categoryItems} = await fetchJSON(url, {cache: 'no-cache'});
-        const [item] = categoryItems;
-        dispatch({type: loadItemSucceeded, payload: {item}});
-    } catch (err: unknown) {
-        if (err instanceof Error) {
-            console.log("()", err.message);
-            dispatch({type: loadItemFailed, payload: {error: err, context: loadItemRequested}});
+    {
+        condition: (arg, {getState}) => {
+            const state = getState() as RootState;
+            return !selectItemsLoading(state);
         }
     }
-}
+)
 
-export const saveItemSortAction = (items: Item[]): ItemsThunkAction => async (dispatch, getState) => {
-    try {
-        const state = getState();
-        if (selectCategoriesLoading(state) || selectItemsLoading(state)) {
-            return;
-        }
-        const site = currentSiteSelector(state);
-        const {id: parentId} = selectCurrentCategory(state);
-        const body = {
-            items: items.map(({id, priority}) => ({id, priority}))
-        };
-        const url = buildPath(URL[site.name].saveSort, {parentId});
-
-        dispatch({type: itemSortSaveRequested});
-        const {categoryItems} = await fetchPOST(url, body);
-        dispatch({type: itemSortSaveSucceeded, payload: {list: categoryItems}});
-    } catch (err: unknown) {
-        if (err instanceof Error) {
-            console.log("saveItemSortAction()", err.message);
-            dispatch({type: itemSortSaveFailed, payload: {error: err, context: itemSortSaveRequested}});
+export const saveItemSort = createAsyncThunk<ProductCategoryChild[], PostItemSortArg>(
+    'items/saveSort',
+    async (arg) => {
+        return await postItemSort(arg);
+    },
+    {
+        condition: (arg, {getState}) => {
+            const state = getState() as RootState;
+            return !!arg.parentId && !!arg.items.length && !selectSortSaving(state)
         }
     }
-};
+)
 
-export const updateItemAction = (change: Object): ItemsAction => ({type: itemChanged, payload: {change}});
+export type UpdateItemProps = Partial<Omit <ProductCategoryChild, 'category'|'product'>>
+/**
+ * Note: when updating the itemType property, all fields that require changes must be submitted at the same time.
+ * For example: dispatch(updateCurrentItem({itemType: 'category', }))
+ */
+export const updateCurrentItem = createAction<UpdateItemProps>('items/current/update');
 
-
-export const saveCategoryItemAction = (): ItemsThunkAction =>
-    async (dispatch, getState) => {
-        try {
-            const state = getState();
-            if (selectCategoriesLoading(state) || selectItemsLoading(state) || selectSortSaving(state) || selectItemSaving(state)) {
-                return;
-            }
-            const site = currentSiteSelector(state);
-            const item = selectCurrentItem(state);
-            item.parentId = selectCurrentCategory(state).id;
-            if (item.id === 0) {
-                item.priority = selectItemList(state).length;
-            }
-
-            dispatch({type: saveItemRequested});
-            const url = URL[site.name].saveItem;
-            const {item: savedItem} = await fetchPOST(url, item);
-            dispatch({type: saveItemSucceeded, payload: {item: savedItem}});
-        } catch (err: unknown) {
-            if (err instanceof Error) {
-                console.log("()", err.message);
-                dispatch({type: saveItemFailed, payload: {error: err, context: saveItemRequested}});
-            }
+export const saveCurrentItem = createAsyncThunk<ProductCategoryChild | null, CategoryItem>(
+    'items/current/save',
+    async (arg) => {
+        return await postItem(arg);
+    },
+    {
+        condition: (arg, {getState}) => {
+            const state = getState() as RootState;
+            return !selectSortSaving(state) && !selectItemSaving(state);
         }
-    };
+    }
+)
 
-export const deleteCategoryItemAction = (): ItemsThunkAction =>
-    async (dispatch, getState) => {
-        try {
-            const state = getState();
-            if (selectCategoriesLoading(state) || selectItemsLoading(state) || selectSortSaving(state) || selectItemSaving(state)) {
-                return;
-            }
-            const site = currentSiteSelector(state);
-            const item = selectCurrentItem(state);
-            if (!item.id) {
-                return;
-            }
-            dispatch({type: deleteItemRequested});
-            const url = buildPath(URL[site.name].deleteItem, {id: item.id, parentId: item.parentId});
-            const {items = []} = await fetchDELETE(url);
-            dispatch({type: deleteItemSucceeded, payload: {list: items}});
-        } catch (err: unknown) {
-            if (err instanceof Error) {
-                console.log("deleteCategoryItemAction()", err.message);
-                dispatch({type: deleteItemFailed, payload: {error: err, context: deleteItemRequested}});
-            }
+
+export const deleteCurrentItem = createAsyncThunk<ProductCategoryChild[], CategoryItem>(
+    'items/delete',
+    async (arg) => {
+        return await deleteItem(arg);
+    },
+    {
+        condition: (arg, {getState}) => {
+            const state = getState() as RootState;
+            return !!arg.id && !selectSortSaving(state) && !selectItemSaving(state);
         }
-    };
-
-
-export const createNewItemAction = (parentId: number) => ({
-    type: itemSelected,
-    payload: {item: {...defaultItem, parentId}}
-});
-
+    }
+)

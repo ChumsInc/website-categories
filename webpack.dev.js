@@ -13,14 +13,19 @@ const localProxy = {
 module.exports = merge(common, {
     mode: 'development',
     devServer: {
-        static: [{
-            directory: path.join(__dirname, 'public'),
-            watch: false,
-        }, {
-            directory: path.join(__dirname, 'node_modules'),
-            publicPath: '/node_modules',
-            watch: false,
-        }],
+        static: [
+            {
+                directory: path.join(process.cwd(), 'public'),
+                watch: false,
+            }, {
+                directory: path.join(process.cwd(), 'node_modules'),
+                publicPath: '/node_modules',
+                watch: false,
+            }, {
+                directory: path.join(process.cwd()),
+                watch: false,
+            }
+        ],
         hot: true,
         proxy: {
             '/api': {...localProxy},
@@ -28,13 +33,8 @@ module.exports = merge(common, {
             '/node-sage/': {...localProxy},
             '/sage/': {...localProxy},
         },
-        watchFiles: {
-            paths: 'src/**/*',
-            options: {
-                cwd: path.join(__dirname, '/')
-            }
-        },
+        watchFiles: 'src/**/*',
     },
-    devtool: 'inline-source-map',
+    devtool: 'eval-source-map',
     plugins: []
 });

@@ -1,22 +1,21 @@
 import React, {useRef} from 'react';
-import {useDrag, useDrop, DropTargetMonitor} from 'react-dnd';
-import {Item} from "../types";
+import {DropTargetMonitor, useDrag, useDrop} from 'react-dnd';
 import {XYCoord} from "dnd-core";
 import classNames from "classnames";
-import {itemTypes, selectCurrentItem} from "./index";
+import {itemTypes,} from "./index";
 import ProductImage from "./ProductImage";
-import {useDispatch, useSelector} from "react-redux";
-import CategoryImage from "./CategoryImage";
-import {buildPath} from "chums-ducks";
-import {PATH_URL_OVERRIDE, SITE_NAMES} from "../../constants";
-import {currentSiteSelector} from "../sites";
+import {useSelector} from "react-redux";
 import isURL from 'validator/lib/isURL';
-import {selectItemAction} from "./actions";
+import {setCurrentItem} from "./actions";
 import "./ItemCard.scss";
+import {isCategoryChildCategory, isCategoryChildLink, isCategoryChildProduct} from "./utils";
+import {useAppDispatch} from "../../app/configureStore";
+import {selectCurrentItem} from "./selectors";
+import {CategoryItem} from "../types";
 
 
 interface ItemCardProps {
-    item:Item,
+    item: CategoryItem,
     index: number,
     moveItem: (dragIndex: number, hoverIndex: number) => void,
 }
@@ -31,11 +30,10 @@ const style = {
     cursor: 'move',
 }
 
-const ItemCard:React.FC<ItemCardProps> = ({item, index, moveItem}) => {
-    const dispatch = useDispatch();
+const ItemCard = ({item, index, moveItem}: ItemCardProps) => {
+    const dispatch = useAppDispatch();
     const ref = useRef<HTMLDivElement>(null);
-    const selected = useSelector(selectCurrentItem);
-    const site = useSelector(currentSiteSelector);
+    const current = useSelector(selectCurrentItem);
 
     const [collectedProps, drop] = useDrop({
         accept: 'item',
@@ -44,7 +42,7 @@ const ItemCard:React.FC<ItemCardProps> = ({item, index, moveItem}) => {
                 handlerId: monitor.getHandlerId(),
             }
         },
-        hover(item: unknown, monitor:DropTargetMonitor) {
+        hover(item: unknown, monitor: DropTargetMonitor) {
             if (!ref.current) {
                 return;
             }
@@ -60,7 +58,7 @@ const ItemCard:React.FC<ItemCardProps> = ({item, index, moveItem}) => {
             const hoverClientY = (clientOffset as XYCoord).y - hoverBoundingRect.top;
             const hoverClientX = (clientOffset as XYCoord).x - hoverBoundingRect.left;
 
-            if (dragIndex < hoverIndex && (hoverClientX < hoverMiddleX || hoverClientY < hoverMiddleY) ) {
+            if (dragIndex < hoverIndex && (hoverClientX < hoverMiddleX || hoverClientY < hoverMiddleY)) {
                 return;
             }
 
@@ -74,7 +72,7 @@ const ItemCard:React.FC<ItemCardProps> = ({item, index, moveItem}) => {
         item: () => {
             return {item, index};
         },
-        collect: (monitor:any) => ({
+        collect: (monitor: any) => ({
             isDragging: monitor.isDragging()
         })
     });
@@ -82,41 +80,47 @@ const ItemCard:React.FC<ItemCardProps> = ({item, index, moveItem}) => {
     const opacity = isDragging ? 0 : 1;
     drag(drop(ref));
 
-    const {itemType, product, category, imageUrl, urlOverride} = item;
+    const isInactive = !item.status
+        || (isCategoryChildCategory(item) && !item.category?.status)
+        || (isCategoryChildProduct(item) && !item.product?.status)
 
     const className = {
         dragging: isDragging,
-        product: itemType === itemTypes.product,
-        category: itemType === itemTypes.category,
-        section: itemType === itemTypes.section,
-        link: itemType === itemTypes.link,
-        other: itemType === itemTypes.html,
-        inactive: !(!!item.status || (!!product && !!product.status))
+        product: item.itemType === itemTypes.product,
+        category: item.itemType === itemTypes.category,
+        section: item.itemType === itemTypes.section,
+        link: item.itemType === itemTypes.link,
+        inactive: isInactive,
     };
     const btnClassName = {
-        'btn-light': selected.id === item.id,
-        'btn-dark': selected.id !== item.id
+        'btn-light': current?.id === item.id,
+        'btn-dark': current?.id !== item.id
     };
 
     const onClick = () => {
-        dispatch(selectItemAction(item));
+        dispatch(setCurrentItem(item));
     };
 
     return (
         <div ref={ref} style={{...style, opacity}}
              className={classNames("sortable-item", className)}>
-            <button type="button"  onClick={onClick}
+            <button type="button" onClick={onClick}
                     className={classNames("btn btn-sm mb-1 sortable-item--edit-button", btnClassName)}>
                 Edit
             </button>
             <div className="sortable-item-padding">
-                {itemType === itemTypes.product && product && <ProductImage image={product.image} defaultColor={product.defaultColor} imageUrl={imageUrl}/>}
-                {itemType === itemTypes.category && category && <ProductImage imageUrl={imageUrl}/>}
-                {itemType === itemTypes.link && !!imageUrl && <ProductImage imageUrl={imageUrl}/>}
-                {!urlOverride && <div>{item.title || item.sectionTitle}</div>}
-                {!!urlOverride && (
+                {isCategoryChildProduct(item) &&
+                    <ProductImage image={item.product?.image} defaultColor={item.product?.defaultColor}
+                                  imageUrl={item.imageUrl}/>}
+                {isCategoryChildCategory(item) && <ProductImage imageUrl={item.imageUrl}/>}
+                {isCategoryChildLink(item) && !!item.imageUrl && <ProductImage imageUrl={item.imageUrl}/>}
+                {!item.urlOverride && <div>{item.title || item.sectionTitle}</div>}
+                {!!item.urlOverride && (
                     <div>
-                        <a href={isURL(urlOverride) ? urlOverride : buildPath(PATH_URL_OVERRIDE, {site: site.domain}) + urlOverride}
+                        <a href={
+                            isURL(item.urlOverride)
+                                ? item.urlOverride
+                                : `https://b2b.chums.com/${item.urlOverride.replace(/^\//, '')}`}
                            target="_blank">
                             {item.title || item.sectionTitle}
                         </a>

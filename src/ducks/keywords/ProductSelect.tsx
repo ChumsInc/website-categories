@@ -1,18 +1,19 @@
 import React, {ChangeEvent} from "react";
-import {useSelector} from "react-redux";
-import {filteredListSelector} from "./index";
-import {Keyword} from "../types";
-import Select from "chums-ducks/dist/components/Select";
+import {selectKeywordsByType} from "./index";
+import {Keyword} from "b2b-types";
+import {Select} from "chums-components";
+import {useAppSelector} from "../../app/configureStore";
 
 interface ProductSelectProps {
     value: number,
     required?: boolean,
-    onChange: (keyword?:Keyword) => void,
+    onChange: (keyword?: Keyword) => void,
 }
-const ProductSelect:React.FC<ProductSelectProps> = ({value, required, onChange}) => {
-    const list = useSelector(filteredListSelector('product'));
 
-    const changeHandler = (ev:ChangeEvent<HTMLSelectElement>) => {
+const ProductSelect = ({value, required, onChange}: ProductSelectProps) => {
+    const list = useAppSelector((state) => selectKeywordsByType(state, 'product'));
+
+    const changeHandler = (ev: ChangeEvent<HTMLSelectElement>) => {
         const {value} = ev.target;
         if (!value) {
             return;

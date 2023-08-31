@@ -1,90 +1,49 @@
-import {
-    categoriesURL,
-    CategoryAction,
-    categoryChanged,
-    categoryFilterChanged,
-    categorySelected,
-    CategoryThunkAction,
-    loadCategories,
-    loadCategoriesFailed,
-    loadCategoriesSucceeded,
-    selectCategoriesLoading,
-    saveCategory,
-    saveCategoryFailed,
-    saveCategorySucceeded,
-    showInactiveToggled,
-} from "./index";
-import {Action} from "redux";
-import {currentSiteSelector} from "../sites";
-import {RootState} from "../index";
-import {Category, defaultCategory} from "../types";
-import {buildPath, fetchJSON} from "chums-ducks";
+import {selectCategoriesLoading,} from "./selectors";
+import {RootState} from "../../app/configureStore";
+import {createAction, createAsyncThunk} from "@reduxjs/toolkit";
+import {ProductCategory} from "b2b-types";
+import {fetchCategories, fetchCategory, postCategory} from "../../api/categories";
+import {SortProps} from "chums-components";
 
-export const toggleShowInactiveAction = (): CategoryAction => ({type: showInactiveToggled});
-export const setFilter = (filter: string): CategoryAction => ({type: categoryFilterChanged, payload: {filter}});
+export const toggleShowInactive = createAction<boolean | undefined>('categories/toggleShowInactive')
+export const setFilter = createAction<string>('categories/setFilter');
+export const updateCategory = createAction<Partial<ProductCategory>>('categories/current/update');
+export const setCategoriesSort = createAction<SortProps<ProductCategory>>('categories/setSort')
 
-export const loadCategoriesAction = (id?: number): CategoryThunkAction =>
-    async (dispatch, getState) => {
-        const state: RootState = getState() as RootState;
-        const site = currentSiteSelector(state);
-        const loading = selectCategoriesLoading(state);
-        if (loading) {
-            return;
-        }
-        try {
-            dispatch({type: loadCategories, payload: {}});
-            const url = buildPath(categoriesURL(site.name), {id});
-            const {categories = [] as Category[]} = await fetchJSON(url, {cache: 'no-cache'});
-            if (!!id && categories.length === 1) {
-                const [category] = categories;
-                return dispatch({type: loadCategoriesSucceeded, payload: {category}});
-            }
-            dispatch({type: loadCategoriesSucceeded, payload: {list: categories}});
-        } catch (err:unknown) {
-            if (err instanceof Error) {
-                console.log("loadCategoriesAction()", err.message);
-                dispatch({type: loadCategoriesFailed, payload: {error: err}});
-            }
+export const loadCategories = createAsyncThunk<ProductCategory[]>(
+    'categories/list/load',
+    async () => {
+        return await fetchCategories();
+    },
+    {
+        condition: (arg, {getState}) => {
+            const state = getState() as RootState;
+            return !selectCategoriesLoading(state);
         }
     }
+)
 
-export const selectCategoryAction = (category = defaultCategory): CategoryThunkAction =>
-    async (dispatch, getState) => {
-        dispatch({type: categorySelected, payload: {category}});
-        if (category.id) {
-            await dispatch(loadCategoriesAction(category.id))
+export const loadCategory = createAsyncThunk<ProductCategory | null, ProductCategory>(
+    'categories/current/load',
+    async (arg) => {
+        return await fetchCategory(arg.id);
+    }, {
+        condition: (arg, {getState}) => {
+            const state = getState() as RootState;
+            return !!arg && !selectCategoriesLoading(state);
         }
     }
+)
 
-export const changeCategoryAction = (change: Object = defaultCategory): CategoryAction => ({
-    type: categoryChanged,
-    payload: {change}
-})
-
-const getCategoryBody = (category:Category):string => {
-    const {children, ...rest} = category;
-    return JSON.stringify(rest);
-}
-
-export const saveCategoryAction = (category: Category): CategoryThunkAction =>
-    async (dispatch, getState) => {
-        try {
-            const state = getState();
-            const site = currentSiteSelector(state);
-            const loading = selectCategoriesLoading(state);
-            if (loading) {
-                return;
-            }
-            dispatch({type: saveCategory});
-
-            const url = buildPath(categoriesURL(site.name));
-            const body = getCategoryBody(category);
-            const {category: savedCategory} = await fetchJSON(url, {method: 'POST', body});
-            dispatch({type: saveCategorySucceeded, payload: {category: savedCategory}});
-        } catch (err:unknown) {
-            if (err instanceof Error) {
-                console.log("saveCategory()", err.message);
-                dispatch({type: saveCategoryFailed, payload: {error: err, context: saveCategory}});
-            }
+export const saveCategory = createAsyncThunk<ProductCategory | null, ProductCategory>(
+    'categories/current/save',
+    async (arg) => {
+        return await postCategory(arg);
+    }, {
+        condition: (arg, {getState}) => {
+            const state = getState() as RootState;
+            return !!arg.keyword && !selectCategoriesLoading(state)
         }
     }
+)
+

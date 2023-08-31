@@ -1,17 +1,15 @@
 import React, {ChangeEvent} from "react";
-import {InputField} from "chums-ducks/dist/types";
-import {Select} from "chums-ducks/dist/components";
+import {Select} from "chums-components";
 
 export interface SEOPrioritySelectProps {
     value: number,
-    field: string,
     required?: boolean,
-    onChange: ({field, value}: InputField) => void,
+    onChange: (value: number) => void,
 }
 
-const SEOPrioritySelect: React.FC<SEOPrioritySelectProps> = ({value, field, required = false, onChange}) => {
+const SEOPrioritySelect = ({value, required = false, onChange}: SEOPrioritySelectProps) => {
     const changeHandler = (ev: ChangeEvent<HTMLSelectElement>) => {
-        onChange({field, value: Number(ev.target.value)})
+        onChange(Number(ev.target.value))
     }
     return (
         <Select value={value || ''} onChange={changeHandler} required={required} bsSize="sm">

@@ -1,175 +1,113 @@
-import {ActionInterface, Category, defaultItem, Item, ItemType} from '../types'
-import {ThunkAction} from "redux-thunk";
-import {RootState} from "../index";
-import {EmptyObject, combineReducers} from "redux";
-import {CategoryAction, categorySelected, loadCategoriesSucceeded} from "../categories";
+import {CategoryItem, EditableCategoryItem, ItemType} from '../types'
+import {Editable, ProductCategoryChild} from "b2b-types";
+import {createReducer} from "@reduxjs/toolkit";
+import {loadCategory} from "../categories/actions";
+import {deleteCurrentItem, saveCurrentItem, saveItemSort, setCurrentItem, updateCurrentItem} from "./actions";
+import {CategoryChildLink, CategoryChildSection} from "b2b-types/src/products";
 
-export const itemsSortChanged = 'items/sortChanged';
-export const itemSortSaveRequested = 'items/saveSort';
-export const itemSortSaveSucceeded = 'items/saveSort-failed';
-export const itemSortSaveFailed = 'items/saveSort-failed';
-export const itemSelected = 'items/itemSelected';
-export const itemChanged = 'items/itemChanged';
-export const loadItemRequested = 'items/loadItem';
-export const loadItemSucceeded = 'items/loadItem-succeeded';
-export const loadItemFailed = 'items/loadItem-failed';
-export const saveItemRequested = 'items/saveItem';
-export const saveItemSucceeded = 'items/saveItem-succeeded';
-export const saveItemFailed = 'items/saveItem-failed';
-export const deleteItemRequested = 'items/deleteItem';
-export const deleteItemSucceeded = 'items/deleteItem-succeeded';
-export const deleteItemFailed = 'items/deleteItem-failed';
+
+
+
+export interface ItemsState {
+    list: CategoryItem[];
+    current: {
+        item: EditableCategoryItem | null;
+        loading: boolean;
+        saving: boolean;
+    };
+    loading: boolean;
+    savingSort: boolean;
+}
 
 export type ItemTypeList = {
     [key in ItemType]: ItemType;
 };
-export const itemTypes:ItemTypeList = {
+export const itemTypes: ItemTypeList = {
     product: 'product',
     category: 'category',
     section: 'section',
     link: 'link',
-    html: 'html',
 };
 
 
-export interface ItemsAction extends ActionInterface {
-    payload?: {
-        list?: Item[],
-        item?: Item,
-        category?: Category, // implemented by CategoryAction
-        change?: object,
-        error?: Error
-    }
-}
-export interface ItemsThunkAction extends ThunkAction<any, RootState, unknown, ItemsAction> {}
-
-export interface ItemsState {
-    list: Item[],
-    selected: Item|EmptyObject,
-    loading: boolean,
-    savingSort: boolean,
-    savingItem: boolean,
-}
-
-export const defaultItemState:ItemsState = {
+export const defaultItemState: ItemsState = {
     list: [],
-    selected: {},
+    current: {
+        item: null,
+        loading: false,
+        saving: false,
+    },
     loading: false,
     savingSort: false,
-    savingItem: false,
 }
 
-export const itemSort = (a:Item, b:Item) => a.priority - b.priority;
+export const itemSort = (a: CategoryItem, b: CategoryItem) => a.priority - b.priority;
 
-export const selectItemList = (state:RootState):Item[] => state.items.list;
-export const selectItemById = (id:number) => (state:RootState):Item => {
-    const [item] = state.items.list.filter(i => i.id === id);
-    return item || {};
-}
-export const selectCurrentItem = (state:RootState):Item => state.items.selected;
-export const selectItemsLoading = (state:RootState) => state.items.loading;
-export const selectSortSaving = (state:RootState) => state.items.savingSort;
-export const selectItemSaving = (state:RootState) => state.items.savingItem;
 
-const listReducer = (state:Item[] = [], action:ItemsAction):Item[] => {
-    const {type, payload} = action;
-    switch (type) {
-    case loadCategoriesSucceeded:
-        if (payload?.category) {
-            return (payload.category.children || []).sort(itemSort)
-        }
-        return state;
-    case itemSortSaveSucceeded:
-    case deleteItemSucceeded:
-        if (payload?.list) {
-            return payload.list.sort(itemSort);
-        }
-        return state;
-    case loadItemSucceeded:
-    case saveItemSucceeded:
-        if (payload?.item) {
-            const {item} = payload;
-            return [
-                ...state.filter(i => i.id !== item.id),
-                item,
-            ].sort(itemSort);
-        }
-        return state;
-    default: return state;
-    }
-}
-
-const selectedItemReducer = (state:Item = {...defaultItem}, action:ItemsAction): Item => {
-    const {type, payload} = action;
-    switch (type) {
-    case itemSelected:
-    case loadItemSucceeded:
-    case saveItemSucceeded:
-        return payload?.item || {...defaultItem};
-    case itemSortSaveSucceeded:
-        if (state.id && payload?.list) {
-            const [item] = payload.list.filter(i => i.id === state.id);
-            return {...item};
-        }
-        return state;
-    case deleteItemSucceeded:
-        return {...defaultItem};
-
-    case categorySelected:
-        return {
-            ...defaultItem,
-            parentId: payload?.category?.id || 0,
-        }
-    case itemChanged:
-        if (payload?.change) {
-            return {
-                ...state,
-                ...payload.change,
-                changed: true,
+const itemsReducer = createReducer(defaultItemState, builder => {
+    builder
+        .addCase(loadCategory.pending, (state, action) => {
+            if (!state.current.item || state.current.item.id !== action.meta.arg.id) {
+                state.list = [];
             }
-        }
-        return state;
-    default: return state;
-    }
-}
+        })
+        .addCase(loadCategory.fulfilled, (state, action) => {
+            if (action.payload) {
+                state.list = [...action.payload.children].sort(itemSort);
+            }
+        })
+        .addCase(setCurrentItem.pending, (state, action) => {
+            state.current.item = action.meta.arg;
+            state.current.loading = true;
+        })
+        .addCase(setCurrentItem.fulfilled, (state, action) => {
+            state.current.item = action.payload;
+            state.current.loading = false;
+        })
+        .addCase(setCurrentItem.rejected, (state) => {
+            state.current.loading = false;
+        })
+        .addCase(saveCurrentItem.pending, (state) => {
+            state.current.saving = true;
+        })
+        .addCase(saveCurrentItem.fulfilled, (state, action) => {
+            state.current.item = action.payload;
+            state.current.saving = false;
+        })
+        .addCase(saveCurrentItem.rejected, (state, action) => {
+            state.current.saving = false;
+        })
+        .addCase(deleteCurrentItem.pending, (state) => {
+            state.current.saving = true;
+        })
+        .addCase(deleteCurrentItem.fulfilled, (state, action) => {
+            state.list = [...action.payload].sort(itemSort)
+            state.current.item = null;
+            state.current.saving = false;
+        })
+        .addCase(deleteCurrentItem.rejected, (state) => {
+            state.current.saving = false;
+            state.current.item = null;
+        })
+        .addCase(saveItemSort.pending, (state) => {
+            state.savingSort = true;
+        })
+        .addCase(saveItemSort.fulfilled, (state, action) => {
+            state.savingSort = false;
+            state.list = [...action.payload].sort(itemSort);
+            if (state.current.item) {
+                const [current] = action.payload.filter(item => item.id === state.current.item?.id);
+                state.current.item = current;
+            }
+        })
+        .addCase(saveItemSort.rejected, (state) => {
+            state.savingSort = false;
+        })
+        .addCase(updateCurrentItem, (state, action) => {
+            if (state.current.item) {
+                state.current.item = {...state.current.item, ...action.payload, changed: true} as EditableCategoryItem;
+            }
+        })
+});
 
-const savingSortReducer = (state:boolean = false, action:ItemsAction): boolean => {
-    switch (action.type) {
-    case itemSortSaveRequested:
-        return true;
-    case itemSortSaveSucceeded:
-    case itemSortSaveFailed:
-        return false;
-    default: return state;
-    }
-}
-
-const loadingReducer = (state:boolean = false, action:ItemsAction):boolean => {
-    switch (action.type) {
-    case loadItemRequested:
-        return true;
-    case loadItemSucceeded:
-    case loadItemFailed:
-        return false;
-    default: return state;
-    }
-}
-
-const savingItemReducer = (state: boolean = false, action: ItemsAction):boolean => {
-    switch (action.type) {
-    case saveItemRequested:
-        return true;
-    case saveItemSucceeded:
-    case saveItemFailed:
-        return false;
-    default: return state;
-    }
-}
-
-export default combineReducers({
-    list: listReducer,
-    selected: selectedItemReducer,
-    loading: loadingReducer,
-    savingItem: savingItemReducer,
-    savingSort: savingSortReducer,
-})
+export default itemsReducer;

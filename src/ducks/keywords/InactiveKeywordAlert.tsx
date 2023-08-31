@@ -1,30 +1,42 @@
 import React from 'react';
-import {useSelector} from 'react-redux';
-import {Alert} from "chums-ducks/dist/ducks";
-import {keywordIdSelector, keywordSelector} from "./index";
-import {ItemType, Keyword} from "../types";
+import {Alert} from "chums-components";
+import {KeywordPageType, selectKeywordById, selectKeywordByName} from "./index";
+import {useAppSelector} from "../../app/configureStore";
 
 
 interface InactiveAlertProps {
     keyword?: string,
     id?: number,
-    itemType?:ItemType,
+    pageType?: KeywordPageType,
 }
 
-const InactiveKeywordAlert:React.FC<InactiveAlertProps> = ({keyword, id, itemType}) => {
-    let kw:Keyword;
-    if (keyword) {
-        [kw] = useSelector(keywordSelector(keyword));
-    } else if (!!id && !!itemType) {
-        [kw] = useSelector(keywordIdSelector(id, itemType))
-    } else {
-        return null;
+const InactiveIdKeywordAlert = ({id, pageType}: { id: number, pageType?: KeywordPageType }) => {
+    const keyword = useAppSelector((state) => selectKeywordById(state, id, pageType));
+    if (keyword && !keyword.status) {
+        return <Alert color="warning" title="Warning">'{keyword.title}' is inactive.</Alert>
     }
-    if (kw.status === 0) {
+    return null;
+}
+
+const InactiveNamedKeywordAlert = ({keyword}: { keyword: string }) => {
+    const kw = useAppSelector((state) => selectKeywordByName(state, keyword));
+    if (kw && !kw.status) {
         return <Alert color="warning" title="Warning">'{kw.title}' is inactive.</Alert>
     }
     return null;
 
+}
+const InactiveKeywordAlert = ({keyword, id, pageType}: InactiveAlertProps) => {
+    if (keyword) {
+        return (
+            <InactiveNamedKeywordAlert keyword={keyword}/>
+        )
+    } else if (!!id && !!pageType) {
+        return (
+            <InactiveIdKeywordAlert id={id} pageType={pageType}/>
+        )
+    }
+    return null;
 }
 
 export default InactiveKeywordAlert

@@ -1,9 +1,10 @@
 import React from "react";
-import {itemTypes, selectCurrentItem} from "./index";
+import {itemTypes} from "./index";
 import classNames from "classnames";
 import {ItemType} from "../types";
 import {useDispatch, useSelector} from "react-redux";
-import {updateItemAction} from "./actions";
+import {updateCurrentItem} from "./actions";
+import {selectCurrentItem} from "./selectors";
 
 const buttonClassName = (state: boolean) => {
     return {
@@ -14,34 +15,48 @@ const buttonClassName = (state: boolean) => {
 };
 
 
-const ItemTypeButtonSet:React.FC = () => {
+const ItemTypeButtonSet = () => {
     const dispatch = useDispatch();
-    const {itemType} = useSelector(selectCurrentItem);
+    const item = useSelector(selectCurrentItem);
 
-    const onSelectItemType = (type:ItemType) => dispatch(updateItemAction({itemType: type}));
+    const onSelectItemType = (type:ItemType) => {
+        if (!item) {
+            return;
+        }
+        switch (type) {
+            case 'product':
+            case 'link':
+                return dispatch(updateCurrentItem({itemType: type, categoriesId: 0}));
+            case 'category':
+                return dispatch(updateCurrentItem({itemType: type, productsId: 0}));
+            case 'section':
+                return dispatch(updateCurrentItem({itemType: type, productsId: 0, categoriesId: 0}));
+        }
+    }
+
     return (
         <div className="btn-group btn-group-sm item-types">
             <button type="button"
                     onClick={() => onSelectItemType('section')}
-                    className={classNames('section', buttonClassName(itemType === 'section'))}>
+                    className={classNames('section', buttonClassName(item?.itemType === 'section'))}>
                 Section
             </button>
 
             <button type="button"
                     onClick={() => onSelectItemType('product')}
-                    className={classNames('product', buttonClassName(itemType === 'product'))}>
+                    className={classNames('product', buttonClassName(item?.itemType === 'product'))}>
                 Product
             </button>
 
             <button type="button"
                     onClick={() => onSelectItemType('category')}
-                    className={classNames('category', buttonClassName(itemType === itemTypes.category))}>
+                    className={classNames('category', buttonClassName(item?.itemType === itemTypes.category))}>
                 Category
             </button>
 
             <button type="button"
                     onClick={() => onSelectItemType('link')}
-                    className={classNames('link', buttonClassName(itemType === itemTypes.link))}>
+                    className={classNames('link', buttonClassName(item?.itemType === itemTypes.link))}>
                 Link
             </button>
         </div>

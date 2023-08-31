@@ -6,7 +6,7 @@
 }
 
 #app .form-row {
-  padding-bottom: calc(.25rem + 1px);
+  padding-bottom: calc(0.25rem + 1px);
 }
 #app .form-row label {
   margin-bottom: 0;
@@ -16,6 +16,13 @@
 }
 #app select option.inactive {
   background-color: lightgray;
+}
+#app .sortable-item-list {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  align-content: flex-start;
 }
 #app .products-list {
   display: flex;
@@ -46,13 +53,6 @@
 #app .products-list .product .product-stuff .info-container {
   flex: 1 0 50%;
   padding-left: 0.25rem;
-}
-#app .sortable-item-list {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  align-content: flex-start;
 }
 #app .btn-group.item-types .btn-secondary,
 #app .btn-group.item-types .btn-outline-secondary:hover {

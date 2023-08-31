@@ -6,7 +6,7 @@ export interface StatusButtonProps {
     onChange: (status:boolean) => void,
 }
 
-const StatusButton:React.FC<StatusButtonProps> = ({status, onChange}) => {
+const StatusButton = ({status, onChange}:StatusButtonProps) => {
     const onClickEnabled = () => onChange(true);
     const onClickDisabled = () => onChange(false);
     const enabledButtonClassName = classNames('btn btn-sm', {

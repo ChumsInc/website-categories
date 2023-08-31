@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {Modal} from "chums-ducks";
+import {Modal} from "chums-components";
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-html";
 import "ace-builds/src-noconflict/theme-github";
@@ -11,7 +11,7 @@ interface ModalEditorProps {
     onCancel: () => void,
 }
 
-const ModalEditor: React.FC<ModalEditorProps> = ({title, content, onClose, onCancel}) => {
+const ModalEditor = ({title, content, onClose, onCancel}:ModalEditorProps) => {
     const [html, setHTML] = useState(content || '');
     useEffect(() => {
         setHTML(content);

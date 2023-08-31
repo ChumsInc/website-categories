@@ -1,7 +1,7 @@
 import React from 'react';
 
 export interface FriendlyDateProps {
-    date: Date|string|number|null;
+    date?: Date|string|number|null;
 }
 
 const halfDay = 12 * 60 * 60 * 1000;
@@ -25,7 +25,7 @@ function friendlyDate(value:Date|number|string|null) {
     return date.toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit'});
 }
 
-const FriendlyDate:React.FC<FriendlyDateProps> = ({date}) => {
+const FriendlyDate = ({date}:FriendlyDateProps) => {
     if (!date) {
         return null;
     }

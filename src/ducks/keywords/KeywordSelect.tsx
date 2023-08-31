@@ -1,18 +1,19 @@
 import React, {ChangeEvent} from "react";
-import {useSelector} from "react-redux";
-import {filteredListSelector} from "./index";
-import {Keyword} from "../types";
-import Select from "chums-ducks/dist/components/Select";
+import {KeywordPageType, selectKeywordsByType} from "./index";
+import {Select} from "chums-components";
+import {Keyword} from "b2b-types";
+import {useAppSelector} from "../../app/configureStore";
 
 interface KeywordSelectProps {
-    pageType?: 'category'|'product'|'page',
+    pageType?: KeywordPageType,
     value: string,
-    onChange: (keyword?:Keyword) => void,
+    onChange: (keyword?: Keyword) => void,
 }
-const KeywordSelect:React.FC<KeywordSelectProps> = ({pageType, value, onChange}) => {
-    const list = useSelector(filteredListSelector(pageType));
 
-    const changeHandler = (ev:ChangeEvent<HTMLSelectElement>) => {
+const KeywordSelect = ({pageType, value, onChange}: KeywordSelectProps) => {
+    const list = useAppSelector((state) => selectKeywordsByType(state, pageType));
+
+    const changeHandler = (ev: ChangeEvent<HTMLSelectElement>) => {
         const {value} = ev.target;
         const [keyword] = list.filter(kw => kw.keyword === value);
         onChange(keyword);

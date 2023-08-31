@@ -1,38 +1,35 @@
 import React, {ChangeEvent} from 'react';
-import SiteSelect from "../sites/SiteSelect";
-import {FormCheck, Input, Progress, ProgressBar} from "chums-ducks/dist/components";
-import {useDispatch, useSelector} from "react-redux";
-import {selectCategoryFilter, selectCategoriesLoading, selectShowInactive,} from "./index";
-import {loadCategoriesAction, setFilter, toggleShowInactiveAction} from "./actions";
-import {SpinnerButton, ToggleButton} from "chums-ducks";
-import {loadKeywordsAction} from "../keywords";
+import {Input, SpinnerButton, ToggleButton} from "chums-components";
+import {useSelector} from "react-redux";
+import {selectCategoriesLoading, selectCategoryFilter, selectShowInactive,} from "./selectors";
+import {loadCategories, setFilter, toggleShowInactive} from "./actions";
+import {loadKeywords} from "../keywords";
+import {useAppDispatch} from "../../app/configureStore";
 
 const CategoryListFilter: React.FC = () => {
-    const dispatch = useDispatch();
-
+    const dispatch = useAppDispatch();
     const filter = useSelector(selectCategoryFilter);
     const showInactive = useSelector(selectShowInactive);
     const loading = useSelector(selectCategoriesLoading);
-    const onToggleShowInactive = () => {
-        dispatch(toggleShowInactiveAction());
+
+    const onToggleShowInactive = (ev: ChangeEvent<HTMLInputElement>) => {
+        dispatch(toggleShowInactive(ev.target.checked));
     }
+
     const onChangeFilter = (ev: ChangeEvent<HTMLInputElement>) => {
-        console.log(ev);
         dispatch(setFilter(ev.target.value));
     }
 
     const onReload = () => {
-        dispatch(loadCategoriesAction());
-        dispatch(loadKeywordsAction())
+        dispatch(loadCategories());
+        dispatch(loadKeywords())
     }
+
     return (
         <div className="row g-3 align-items-baseline">
             <div className="col-auto">
-                <SiteSelect/>
-            </div>
-            <div className="col-auto">
                 <ToggleButton id="category-list--filter-inactive" size="sm"
-                              color="warning" checked={showInactive} onClick={onToggleShowInactive}>
+                              color="warning" checked={showInactive} onChange={onToggleShowInactive}>
                     Show Inactive
                 </ToggleButton>
             </div>
@@ -50,4 +47,4 @@ const CategoryListFilter: React.FC = () => {
     )
 }
 
-export default React.memo(CategoryListFilter);
+export default CategoryListFilter;

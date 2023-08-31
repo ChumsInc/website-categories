@@ -1,216 +1,263 @@
-import React, {FormEvent, Fragment, useState} from 'react';
-import {useDispatch, useSelector} from 'react-redux';
-import classNames from "classnames";
-import {deleteCategoryItemAction, saveCategoryItemAction, selectItemAction, updateItemAction} from "./actions";
-import {itemTypes, selectCurrentItem} from "./index";
-import {FieldInput, FieldTextArea, FormColumn} from "chums-ducks/dist/components";
-import {defaultItem, InputField, Keyword} from "../types";
+import React, {ChangeEvent, FormEvent, Fragment, useState} from 'react';
+import {useSelector} from 'react-redux';
+import {deleteCurrentItem, saveCurrentItem, setCurrentItem, updateCurrentItem} from "./actions";
+import {itemTypes} from "./index";
+import {Alert, FormColumn} from "chums-components";
+import {CategoryItem, defaultItem, InputField} from "../types";
 import InactiveKeywordAlert from "../keywords/InactiveKeywordAlert";
 import ProductSelect from "../keywords/ProductSelect";
 import CategorySelect from "../categories/CategorySelect";
-import {disallowedParentsSelector, selectCurrentCategory} from "../categories";
+import {selectCurrentCategory, selectDisallowedParents} from "../categories/selectors";
 import ModalEditor from "../../components/ModalEditor";
-import {setModalEditorAction} from "../modal-editor";
-import {Alert} from "chums-ducks/dist/ducks";
 import StatusButton from "../../components/StatusButton";
 import ItemTypeButtonSet from "./ItemTypeButtonSet";
-import {InputGroup} from "chums-ducks";
+import {useAppDispatch} from "../../app/configureStore";
+import {selectCurrentItem} from "./selectors";
+import {isCategoryChildCategory, isCategoryChildLink, isCategoryChildProduct, isCategoryChildSection} from "./utils";
+import {TextareaAutosize} from "@mui/base";
+import {Keyword, ProductCategoryChild} from "b2b-types";
 
-type EditorField = 'sectionDescription' | 'description';
+type EditorField = keyof Pick<ProductCategoryChild, 'sectionDescription' | 'description'>;
 
-const buttonClassName = (state: boolean) => {
-    return {
-        'btn btn-sm': true,
-        'btn-outline-secondary': !state,
-        'btn-secondary': state
-    };
-};
-
-const activeButtonClassName = (state: boolean, defaultState: boolean = false) => {
-    return {
-        'btn btn-sm': true,
-        'btn-outline-success': !state && defaultState,
-        'btn-success': state && defaultState,
-        'btn-outline-danger': !defaultState && state,
-        'btn-danger': !defaultState && !state,
-    };
-};
-
-const ItemEditor: React.FC = () => {
-    const dispatch = useDispatch();
+const ItemEditor = () => {
+    const dispatch = useAppDispatch();
     const category = useSelector(selectCurrentCategory);
     const item = useSelector(selectCurrentItem);
-    const disallowedParents = useSelector(disallowedParentsSelector);
-    const [showEditor, setShowEditor] = useState(false);
-    const [editorField, setEditorField] = useState('description' as EditorField);
+    const disallowedParents = useSelector(selectDisallowedParents);
+    const [editorField, setEditorField] = useState<EditorField | null>(null);
 
-    const onChangeStatus = (status:boolean) => changeHandler({field: 'status', value: status});
+    const onChangeStatus = (status: boolean) => valueChangeHandler({field: 'status', value: status});
 
     const onSubmit = (ev: FormEvent<HTMLFormElement>) => {
         ev.preventDefault();
-        dispatch(saveCategoryItemAction());
+        if (!item) {
+            return;
+        }
+        dispatch(saveCurrentItem(item));
     }
 
-    const changeHandler = ({field, value}: InputField) => {
-        dispatch(updateItemAction({[field]: value}));
+    const changeHandler = (field: keyof CategoryItem) => (ev: ChangeEvent<HTMLInputElement>) => {
+        switch (field) {
+            case 'className':
+            case 'imageUrl':
+            case 'sectionTitle':
+            case 'title':
+            case 'urlOverride':
+                dispatch(updateCurrentItem({[field]: ev.target.value}));
+                return;
+        }
     }
 
-    const keywordChangeHandler = (field: string, keyword?: Keyword) => {
-        changeHandler({field, value: keyword?.id || 0})
+    const selectChangeHandler = (field: keyof CategoryItem) => (ev: ChangeEvent<HTMLSelectElement>) => {
+        switch (field) {
+            case 'categoriesId':
+            case 'productsId':
+                dispatch(updateCurrentItem({[field]: +ev.target.value}));
+                return;
+
+        }
+    }
+    const textareaChangeHandler = (field: keyof CategoryItem) => (ev: ChangeEvent<HTMLTextAreaElement>) => {
+        switch (field) {
+            case 'description':
+            case 'sectionDescription':
+                dispatch(updateCurrentItem({[field]: ev.target.value}));
+                return;
+        }
     }
 
-    const onClickEdit = (field: EditorField) => {
-        dispatch(setModalEditorAction(`Item.${field}`, item[field] || ''));
-        setEditorField(field);
-        setShowEditor(true);
+
+    const valueChangeHandler = ({field, value}: InputField) => {
+        dispatch(updateCurrentItem({[field]: value}));
+    }
+
+    const keywordChangeHandler = (field:keyof CategoryItem) => (keyword?: Keyword) => {
+        if (!item) {
+            return;
+        }
+        dispatch(updateCurrentItem({[field]: keyword?.id ?? 0}))
     }
 
     const onCloseEditor = (value: string) => {
-        changeHandler({field: editorField, value});
-        setShowEditor(false);
+        if (!editorField || !item) {
+            return;
+        }
+        dispatch(updateCurrentItem({[editorField]: value}));
+        setEditorField(null);
     }
 
     const onCancelEditor = () => {
-        setShowEditor(false);
+        setEditorField(null);
     }
 
     const onNewItem = () => {
-        if (item.changed && !window.confirm('Are you sure you want to lose your current changes?')) {
+        if (!category) {
+            return null;
+        }
+        if (item?.changed && !window.confirm('Are you sure you want to lose your current changes?')) {
             return;
         }
-        dispatch(selectItemAction({...defaultItem, parentId: category.id}));
+        dispatch(setCurrentItem({...defaultItem, parentId: category?.id}));
     }
 
     const onDeleteItem = () => {
+        if (!item || item.id === 0) {
+            return;
+        }
         if (!window.confirm(`Are you sure you want to delete item ${item.title}?`)) {
             return;
         }
-        dispatch(deleteCategoryItemAction());
+        dispatch(deleteCurrentItem(item));
     }
 
-    const {itemType} = item;
-
-    const imageHelpText = itemType === itemTypes.link
+    const imageHelpText = item?.itemType === itemTypes.link
         ? 'Full path, eg. /images/pages/35th-video-lg.jpg'
         : 'Relative to /images/products/:size/';
 
 
-    if (!category.id) {
+    if (!category?.id) {
         return (
             <Alert color="info">Please select (or save) a category first.</Alert>
         )
     }
+
+    if (!item) {
+        return (
+            <div className="row g-3">
+                <div className="col">
+                    <Alert color="info">Select an Item</Alert>
+                </div>
+                <div className="col-auto">
+                    <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onNewItem}>
+                        New Item
+                    </button>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <Fragment>
             <div className="sticky-50">
                 <h4>Edit Item</h4>
-                <hr />
+                <hr/>
                 <form onSubmit={onSubmit}>
                     <FormColumn label="ID / Status" width={8}>
                         <div className="row g-3">
                             <div className="col">
-                                <FieldInput value={item.id || 'new'} readOnly/>
+                                <input type="text" value={item?.id || 'new'} className="form-control form-control-sm"
+                                       readOnly/>
                             </div>
                             <div className="col">
-                                <StatusButton status={!!item.status} onChange={onChangeStatus} />
+                                <StatusButton status={!!item?.status} onChange={onChangeStatus}/>
                             </div>
                         </div>
                     </FormColumn>
                     <FormColumn width={8} label="Item Type">
-                        <ItemTypeButtonSet />
+                        <ItemTypeButtonSet/>
                     </FormColumn>
-                    {itemType === itemTypes.section && (
-                        <Fragment>
+                    {isCategoryChildSection(item) && (
+                        <>
                             <FormColumn label="Section Title" width={8}>
-                                <FieldInput field="sectionTitle" value={item.sectionTitle} onChange={changeHandler}/>
+                                <input type="text" value={item.sectionTitle} onChange={changeHandler('sectionTitle')}
+                                       className="form-control form-control-sm"/>
                             </FormColumn>
                             <FormColumn label="Section Description" width={8}>
-                                <FieldInput field="sectionDescription" value={item.sectionDescription}
-                                            onChange={changeHandler}/>
+                                <div className="input-group input-group-sm">
+                                    <TextareaAutosize className="form-control form-control-sm" maxRows={5}
+                                                      value={item.sectionDescription}
+                                                      onChange={textareaChangeHandler('sectionDescription')}/>
+                                    <button type="button" className="btn btn-sm btn-ouline-secondary"
+                                            onClick={() => setEditorField('sectionDescription')}>
+                                        <span className="bi-code-slash"/>
+                                    </button>
+                                </div>
                             </FormColumn>
-                        </Fragment>
+                        </>
                     )}
-                    {itemType !== itemTypes.section && itemType !== itemTypes.html && (
+                    {!isCategoryChildSection(item) && (
                         <FormColumn label="Title" width={8}>
-                            <FieldInput field="title" value={item.title} onChange={changeHandler}/>
+                            <input type="text" value={item.title} onChange={changeHandler('title')}
+                                   className="form-control form-control-sm"/>
                         </FormColumn>
                     )}
-                    {itemType === itemTypes.product && (
-                        <FormColumn width={8} label="Product">
-                            <ProductSelect value={item.productsId} required
-                                           onChange={(keyword?: Keyword) => keywordChangeHandler('productsId', keyword)}/>
-                        </FormColumn>
+                    {isCategoryChildProduct(item) && (
+                        <>
+                            <FormColumn width={8} label="Product">
+                                <ProductSelect value={item.productsId} required
+                                               onChange={keywordChangeHandler('productsId')}/>
+                            </FormColumn>
+                            <InactiveKeywordAlert keyword={item.product?.keyword}/>
+                        </>
                     )}
-                    {item.product?.keyword && (
-                        <InactiveKeywordAlert keyword={item.product?.keyword}/>
+                    {isCategoryChildCategory(item) && (
+                        <>
+                            <FormColumn width={8} label="Category">
+                                <CategorySelect value={item.categoriesId}
+                                                onChange={(ev) => valueChangeHandler({
+                                                    field: 'categoriesId',
+                                                    value: ev.target.value
+                                                })}
+                                                disallow={disallowedParents} required/>
+                            </FormColumn>
+                            <InactiveKeywordAlert keyword={item.category?.keyword} pageType={item.itemType}/>
+                        </>
                     )}
-                    {itemType === itemTypes.category && (
-                        <FormColumn width={8} label="Category">
-                            <CategorySelect value={item.categoriesId}
-                                            onChange={(ev) => changeHandler({
-                                                field: 'categoriesId',
-                                                value: ev.target.value
-                                            })}
-                                            disallow={disallowedParents} required/>
-                        </FormColumn>
-                    )}
-                    {itemType === itemTypes.category && (
-                        <InactiveKeywordAlert keyword={item.category?.keyword}itemType={itemType}/>
-                    )}
-                    {itemType !== itemTypes.section && itemType !== itemTypes.html && (
+                    {!isCategoryChildSection(item) && (
                         <FormColumn width={8} label="Description">
                             <div className="input-group input-group-sm">
-                                <FieldTextArea value={item.description} field="description"
-                                               onChange={changeHandler}/>
+                                <TextareaAutosize value={item.description}
+                                                  onChange={textareaChangeHandler('description')}
+                                                  className="form-control form-control-sm"/>
                                 <button type="button" className="btn btn-outline-secondary"
-                                        onClick={() => onClickEdit('description')}>
-                                    <span className="material-icons">code</span>
+                                        onClick={() => setEditorField('description')}>
+                                    <span className="bi-code-slash"/>
                                 </button>
                             </div>
                         </FormColumn>
                     )}
-                    {itemType !== itemTypes.html && (
-                        <FormColumn label="Image Filename" width={8}>
-                            <FieldInput field="imageUrl" value={item.imageUrl} onChange={changeHandler}/>
-                            <small>{imageHelpText}</small>
-                        </FormColumn>
-                    )}
-                    {itemType !== itemTypes.html && (
-                        <FormColumn label="Item Classname" width={8}>
-                            <FieldInput value={item.className} field="className" onChange={changeHandler}/>
-                        </FormColumn>
-                    )}
-                    {itemType !== itemTypes.html && (
-                        <FormColumn label="Link To">
-                            <FieldInput value={item.urlOverride}
-                                        field="urlOverride"
-                                        required={itemType === itemTypes.link}
-                                        onChange={changeHandler}
-                            />
-                            <small>If outside of domain, make sure to include 'https://'</small>
-                        </FormColumn>
-                    )}
-                    {itemType === itemTypes.html && (
-                        <Alert color="warning">Pick an item or an item type.</Alert>
-                    )}
+                    <FormColumn label="Image Filename" width={8}>
+                        <input type="text" value={item.imageUrl ?? ''} onChange={changeHandler('imageUrl')}
+                               className="form-control form-control-sm"/>
+                        <small>{imageHelpText}</small>
+                    </FormColumn>
+                    <FormColumn label="Item Classname" width={8}>
+                        <input type="text" value={item.className ?? ''} onChange={changeHandler('className')}
+                               className="form-control form-control-sm"/>
+                    </FormColumn>
+                    <FormColumn label="Link To">
+                        <input type="text" value={item.urlOverride ?? ''} onChange={changeHandler('urlOverride')}
+                               className="form-control form-control-sm" required={isCategoryChildLink(item)}/>
+                        <small>If outside of domain, make sure to include 'https://'</small>
+                    </FormColumn>
                     <FormColumn width={8} label={' '}>
-                        <button type="submit" disabled={!item.parentId} className="btn btn-sm btn-primary me-1">
-                            Save
-                        </button>
-                        <button type="button" onClick={onNewItem} disabled={!item.parentId}
-                                className="btn btn-sm btn-outline-secondary me-1">
-                            New Item
-                        </button>
-                        <button type="button" onClick={onDeleteItem}
-                                className="btn btn-sm btn-outline-danger me-1" disabled={item.id === 0}>
-                            Delete
-                        </button>
+                        <div className="row g-3">
+                            <div className="col-auto">
+                                <button type="submit" disabled={!item.parentId} className="btn btn-sm btn-primary">
+                                    Save
+                                </button>
+                            </div>
+                            <div className="col-auto">
+                                <button type="button" onClick={onNewItem} disabled={!item.parentId}
+                                        className="btn btn-sm btn-outline-secondary">
+                                    New Item
+                                </button>
+                            </div>
+                            <div className="col-auto">
+                                <button type="button" onClick={onDeleteItem}
+                                        className="btn btn-sm btn-outline-danger"
+                                        disabled={item.id === 0}>
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
                     </FormColumn>
                     {item.changed && <Alert message="Don't forget to save."/>}
                 </form>
             </div>
-            {showEditor && <ModalEditor title={`Edit '${editorField}'`} content={item[editorField] || ''}
-                                        onClose={onCloseEditor} onCancel={onCancelEditor}/>}
+            {!!editorField && <ModalEditor title={`Edit '${editorField}'`}
+                                           content={item[editorField] || ''}
+                                           onClose={onCloseEditor} onCancel={onCancelEditor}/>}
         </Fragment>
     )
 }

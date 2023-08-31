@@ -1,12 +1,10 @@
 import React, {ChangeEvent, useEffect, useState} from 'react';
 import {useSelector} from 'react-redux';
-import {Select} from "chums-ducks/dist/components";
+import {Select} from "chums-components";
 import classNames from 'classnames';
-import {categorySorter, CategorySorterProps, defaultCategorySort, selectCategoryList} from "./index";
-import {Category} from "../types";
-
-const keywordSortProps: CategorySorterProps = {field: 'keyword', ascending: true};
-const keywordSort = categorySorter(keywordSortProps);
+import {selectCategoryList} from "./selectors";
+import {ProductCategory} from "b2b-types";
+import {categorySorter} from "./utils";
 
 export interface CategorySelectProps {
     value: number | string,
@@ -16,12 +14,13 @@ export interface CategorySelectProps {
     disabled?: boolean,
 }
 
-const CategorySelect: React.FC<CategorySelectProps> = ({value, disallow = [], required, disabled, onChange}) => {
+const CategorySelect = ({value, disallow = [], required, disabled, onChange}: CategorySelectProps) => {
     const categories = useSelector(selectCategoryList);
-    const [list, setList] = useState<Category[]>([])
+    const [list, setList] = useState<ProductCategory[]>([])
+
     useEffect(() => {
-        const _list = categories.sort(categorySorter(defaultCategorySort));
-        setList(_list);
+        const list = [...categories].sort(categorySorter({field: 'keyword', ascending: true}));
+        setList(list);
     }, [categories]);
 
     return (
@@ -40,4 +39,4 @@ const CategorySelect: React.FC<CategorySelectProps> = ({value, disallow = [], re
     )
 }
 
-export default React.memo(CategorySelect);
+export default CategorySelect;
