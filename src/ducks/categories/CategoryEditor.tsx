@@ -14,6 +14,7 @@ import {saveCategory, updateCategory} from "./actions";
 import {useAppDispatch} from "../../app/configureStore";
 import {ProductCategory} from "b2b-types";
 import {TextareaAutosize} from "@mui/base";
+import UsageByKeyword from "../usage/UsageByKeyword";
 
 type EditorField = keyof Pick<ProductCategory, 'pageText' | 'descriptionMeta'>;
 
@@ -173,6 +174,9 @@ const CategoryEditor: React.FC<CategoryEditorProps> = ({}) => {
                     {category?.changed && <Alert message="Don't forget to save your changes"/>}
                 </form>
                 {loading && <Progress><ProgressBar striped/></Progress>}
+            </div>
+            <div className="my-3">
+                <UsageByKeyword keyword={category?.keyword} />
             </div>
             {!!category && !!editorField &&
                 <ModalEditor title={`Edit '${editorField}'`} content={String(category[editorField]) || ''}

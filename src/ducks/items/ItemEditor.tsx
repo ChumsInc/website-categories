@@ -16,6 +16,7 @@ import {selectCurrentItem} from "./selectors";
 import {isCategoryChildCategory, isCategoryChildLink, isCategoryChildProduct, isCategoryChildSection} from "./utils";
 import {TextareaAutosize} from "@mui/base";
 import {Keyword, ProductCategoryChild} from "b2b-types";
+import UsageByKeyword from "../usage/UsageByKeyword";
 
 type EditorField = keyof Pick<ProductCategoryChild, 'sectionDescription' | 'description'>;
 
@@ -244,6 +245,8 @@ const ItemEditor = () => {
                     {item.changed && <Alert message="Don't forget to save."/>}
                 </form>
             </div>
+            {isCategoryChildProduct(item) && <UsageByKeyword keyword={item.product?.keyword} />}
+            {isCategoryChildCategory(item) && <UsageByKeyword keyword={item.category?.keyword} />}
             {!!editorField && <ModalEditor title={`Edit '${editorField}'`}
                                            content={item[editorField] || ''}
                                            onClose={onCloseEditor} onCancel={onCancelEditor}/>}

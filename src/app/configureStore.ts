@@ -5,12 +5,14 @@ import {TypedUseSelectorHook, useDispatch, useSelector} from "react-redux";
 import categoriesReducer from "../ducks/categories";
 import itemsReducer from "../ducks/items";
 import keywordsReducer from "../ducks/keywords";
+import usageReducer from "../ducks/usage";
 
 const rootReducer = combineReducers({
     alerts: alertsReducer,
     categories: categoriesReducer,
     items: itemsReducer,
     keywords: keywordsReducer,
+    usage: usageReducer,
 })
 
 
