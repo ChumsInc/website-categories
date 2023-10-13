@@ -29,10 +29,12 @@ const CategoryItemList = () => {
 
     const onMoveItem = (dragIndex: number, hoverIndex: number) => {
         const sorted = [...items];
+        if (!sorted[dragIndex]) {
+            return;
+        }
         const movingItem = sorted[dragIndex];
         sorted.splice(dragIndex, 1);
         sorted.splice(hoverIndex, 0, movingItem);
-        let priority = 0;
         const newSort = sorted.map((item, index) => {
             return {
                 ...item,

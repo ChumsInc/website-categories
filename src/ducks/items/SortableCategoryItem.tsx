@@ -46,19 +46,23 @@ const SortableCategoryItem = ({item, index, moveItem}: ItemCardProps) => {
             if (!ref.current) {
                 return;
             }
+            const clientOffset = monitor.getClientOffset();
+            if (!clientOffset) {
+                return;
+            }
             const dragIndex = (item as DragItem).index;
             const hoverIndex = index;
             if (dragIndex === hoverIndex) {
                 return;
             }
             const hoverBoundingRect = ref.current?.getBoundingClientRect();
-            const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-            const hoverMiddleX = (hoverBoundingRect.left - hoverBoundingRect.right) / 2;
-            const clientOffset = monitor.getClientOffset();
-            const hoverClientY = (clientOffset as XYCoord).y - hoverBoundingRect.top;
-            const hoverClientX = (clientOffset as XYCoord).x - hoverBoundingRect.left;
+            const hoverMiddleY = Math.ceil((hoverBoundingRect.bottom - hoverBoundingRect.top) / 2);
+            // const hoverMiddleX = Math.ceil((hoverBoundingRect.left - hoverBoundingRect.right) / 2);
 
-            if (dragIndex < hoverIndex && (hoverClientX < hoverMiddleX || hoverClientY < hoverMiddleY)) {
+            const hoverClientY = clientOffset.y - hoverBoundingRect.top;
+            // const hoverClientX = clientOffset.x - hoverBoundingRect.left;
+
+            if (dragIndex < hoverIndex && (hoverClientY < hoverMiddleY)) {
                 return;
             }
 
@@ -111,11 +115,6 @@ const SortableCategoryItem = ({item, index, moveItem}: ItemCardProps) => {
             </button>
             <div className="sortable-item-padding">
                 <div className="sortable-item-content">
-                    {isCategoryChildProduct(item) &&
-                        <ProductImage image={item.product?.image} defaultColor={item.product?.defaultColor}
-                                      imageUrl={item.imageUrl}/>}
-                    {isCategoryChildCategory(item) && <ProductImage imageUrl={item.imageUrl}/>}
-                    {isCategoryChildLink(item) && !!item.imageUrl && <ProductImage imageUrl={item.imageUrl}/>}
                     {!item.urlOverride && <div>{item.title || item.sectionTitle}</div>}
                     {!!item.urlOverride && (
                         <div>
