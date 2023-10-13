@@ -30,7 +30,7 @@ const style = {
     cursor: 'move',
 }
 
-const ItemCard = ({item, index, moveItem}: ItemCardProps) => {
+const SortableCategoryItem = ({item, index, moveItem}: ItemCardProps) => {
     const dispatch = useAppDispatch();
     const ref = useRef<HTMLDivElement>(null);
     const current = useSelector(selectCurrentItem);
@@ -110,26 +110,28 @@ const ItemCard = ({item, index, moveItem}: ItemCardProps) => {
                 Edit
             </button>
             <div className="sortable-item-padding">
-                {isCategoryChildProduct(item) &&
-                    <ProductImage image={item.product?.image} defaultColor={item.product?.defaultColor}
-                                  imageUrl={item.imageUrl}/>}
-                {isCategoryChildCategory(item) && <ProductImage imageUrl={item.imageUrl}/>}
-                {isCategoryChildLink(item) && !!item.imageUrl && <ProductImage imageUrl={item.imageUrl}/>}
-                {!item.urlOverride && <div>{item.title || item.sectionTitle}</div>}
-                {!!item.urlOverride && (
-                    <div>
-                        <a href={
-                            isURL(item.urlOverride)
-                                ? item.urlOverride
-                                : `https://b2b.chums.com/${item.urlOverride.replace(/^\//, '')}`}
-                           target="_blank">
-                            {item.title || item.sectionTitle}
-                        </a>
-                    </div>
-                )}
+                <div className="sortable-item-content">
+                    {isCategoryChildProduct(item) &&
+                        <ProductImage image={item.product?.image} defaultColor={item.product?.defaultColor}
+                                      imageUrl={item.imageUrl}/>}
+                    {isCategoryChildCategory(item) && <ProductImage imageUrl={item.imageUrl}/>}
+                    {isCategoryChildLink(item) && !!item.imageUrl && <ProductImage imageUrl={item.imageUrl}/>}
+                    {!item.urlOverride && <div>{item.title || item.sectionTitle}</div>}
+                    {!!item.urlOverride && (
+                        <div>
+                            <a href={
+                                isURL(item.urlOverride)
+                                    ? item.urlOverride
+                                    : `https://b2b.chums.com/${item.urlOverride.replace(/^\//, '')}`}
+                               target="_blank">
+                                {item.title || item.sectionTitle}
+                            </a>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     )
 }
 
-export default ItemCard;
+export default SortableCategoryItem;

@@ -19,7 +19,7 @@ const ProductImage = ({
     });
     const src = `https://intranet.chums.com/images/products/400/${encodeURIComponent(imageFile)}`;
     return (
-        <div>
+        <div className="image-container">
             <img className="img-thumbnail" src={src} alt={imageUrl || image} title={imageFile}/>
         </div>
     )

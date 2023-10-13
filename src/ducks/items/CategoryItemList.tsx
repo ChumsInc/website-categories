@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {useSelector} from 'react-redux';
 import {itemSortPriority} from '../../utils';
 import {selectItemList, selectItemsLoading, selectSortSaving} from "./selectors";
-import ItemCard from "./ItemCard";
+import SortableCategoryItem from "./SortableCategoryItem";
 import {saveItemSort} from "./actions";
 import {Progress, ProgressBar} from "chums-components";
 import {HTML5Backend} from "react-dnd-html5-backend";
@@ -33,11 +33,13 @@ const CategoryItemList = () => {
         sorted.splice(dragIndex, 1);
         sorted.splice(hoverIndex, 0, movingItem);
         let priority = 0;
-        sorted.forEach(item => {
-            item.priority = priority;
-            priority += 1;
-        });
-        setItems(sorted);
+        const newSort = sorted.map((item, index) => {
+            return {
+                ...item,
+                priority: index,
+            }
+        })
+        setItems(newSort);
     }
 
     const onSave = () => {
@@ -77,7 +79,7 @@ const CategoryItemList = () => {
             <DndProvider backend={HTML5Backend}>
                 <div className="sortable-item-list">
                     {items.map((item, index) => (
-                            <ItemCard key={item.id} index={index} item={item} moveItem={onMoveItem}/>
+                            <SortableCategoryItem key={item.id} index={index} item={item} moveItem={onMoveItem}/>
                         )
                     )}
                 </div>
