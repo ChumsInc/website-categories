@@ -8,6 +8,7 @@ import {SortProps} from "chums-components";
 export const toggleShowInactive = createAction<boolean | undefined>('categories/toggleShowInactive')
 export const setFilter = createAction<string>('categories/setFilter');
 export const updateCategory = createAction<Partial<ProductCategory>>('categories/current/update');
+export const newCategory = createAction('categories/current/new');
 export const setCategoriesSort = createAction<SortProps<ProductCategory>>('categories/setSort')
 
 export const loadCategories = createAsyncThunk<ProductCategory[]>(

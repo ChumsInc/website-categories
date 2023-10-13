@@ -72,6 +72,15 @@ const itemsReducer = createReducer(defaultItemState, builder => {
         .addCase(saveCurrentItem.fulfilled, (state, action) => {
             state.current.item = action.payload;
             state.current.saving = false;
+            if (action.payload) {
+                state.list = [
+                    ...state.list.filter(item => item.id !== action.meta.arg.id),
+                    action.payload
+                ].sort(itemSort)
+            } else {
+                state.list = state.list.filter(item => item.id !== action.meta.arg.id)
+                    .sort(itemSort)
+            }
         })
         .addCase(saveCurrentItem.rejected, (state) => {
             state.current.saving = false;

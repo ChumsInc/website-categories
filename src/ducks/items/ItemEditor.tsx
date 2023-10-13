@@ -4,7 +4,6 @@ import {deleteCurrentItem, saveCurrentItem, setCurrentItem, updateCurrentItem} f
 import {itemTypes} from "./index";
 import {Alert, FormColumn} from "chums-components";
 import {CategoryItem, defaultItem, InputField} from "../types";
-import InactiveKeywordAlert from "../keywords/InactiveKeywordAlert";
 import ProductSelect from "../keywords/ProductSelect";
 import CategorySelect from "../categories/CategorySelect";
 import {selectCurrentCategory, selectDisallowedParents} from "../categories/selectors";
@@ -17,6 +16,7 @@ import {isCategoryChildCategory, isCategoryChildLink, isCategoryChildProduct, is
 import {TextareaAutosize} from "@mui/base";
 import {Keyword, ProductCategoryChild} from "b2b-types";
 import UsageByKeyword from "../usage/UsageByKeyword";
+import classNames from "classnames";
 
 type EditorField = keyof Pick<ProductCategoryChild, 'sectionDescription' | 'description'>;
 
@@ -63,7 +63,7 @@ const ItemEditor = () => {
         dispatch(updateCurrentItem({[field]: value}));
     }
 
-    const keywordChangeHandler = (field:keyof CategoryItem) => (keyword?: Keyword) => {
+    const keywordChangeHandler = (field: keyof CategoryItem) => (keyword?: Keyword) => {
         if (!item) {
             return;
         }
@@ -172,26 +172,34 @@ const ItemEditor = () => {
                         </FormColumn>
                     )}
                     {isCategoryChildProduct(item) && (
-                        <>
-                            <FormColumn width={8} label="Product">
+                        <FormColumn width={8} label="Product">
+                            <div className="input-group input-group-sm">
+                                <div
+                                    className={classNames("input-group-text text-light", {'bg-danger': !item.product?.status, 'bg-success': !!item.product?.status})}>
+                                    {!!item.product?.status && <span className="bi-bag-check-fill"/>}
+                                    {!item.product?.status && <span className="bi-x-lg"/>}
+                                </div>
                                 <ProductSelect value={item.productsId} required
                                                onChange={keywordChangeHandler('productsId')}/>
-                            </FormColumn>
-                            <InactiveKeywordAlert keyword={item.product?.keyword}/>
-                        </>
+                            </div>
+                        </FormColumn>
                     )}
                     {isCategoryChildCategory(item) && (
-                        <>
-                            <FormColumn width={8} label="Category">
+                        <FormColumn width={8} label="Category">
+                            <div className="input-group input-group-sm">
+                                <div
+                                    className={classNames("input-group-text text-light", {'bg-danger': !item.category?.status, 'bg-success': !!item.category?.status})}>
+                                    {!!item.category?.status && <span className="bi-bag-check-fill"/>}
+                                    {!item.category?.status && <span className="bi-x-lg"/>}
+                                </div>
                                 <CategorySelect value={item.categoriesId}
                                                 onChange={(ev) => valueChangeHandler({
                                                     field: 'categoriesId',
                                                     value: ev.target.value
                                                 })}
                                                 disallow={disallowedParents} required/>
-                            </FormColumn>
-                            <InactiveKeywordAlert keyword={item.category?.keyword} pageType={item.itemType}/>
-                        </>
+                            </div>
+                        </FormColumn>
                     )}
                     {!isCategoryChildSection(item) && (
                         <FormColumn width={8} label="Description">
@@ -242,11 +250,11 @@ const ItemEditor = () => {
                             </div>
                         </div>
                     </FormColumn>
-                    {item.changed && <Alert message="Don't forget to save."/>}
+                    {item.changed && <Alert color="warning" message="Don't forget to save."/>}
                 </form>
             </div>
-            {isCategoryChildProduct(item) && <UsageByKeyword keyword={item.product?.keyword} />}
-            {isCategoryChildCategory(item) && <UsageByKeyword keyword={item.category?.keyword} />}
+            {isCategoryChildProduct(item) && <UsageByKeyword keyword={item.product?.keyword}/>}
+            {isCategoryChildCategory(item) && <UsageByKeyword keyword={item.category?.keyword}/>}
             {!!editorField && <ModalEditor title={`Edit '${editorField}'`}
                                            content={item[editorField] || ''}
                                            onClose={onCloseEditor} onCancel={onCancelEditor}/>}

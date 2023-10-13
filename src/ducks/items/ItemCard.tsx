@@ -93,8 +93,9 @@ const ItemCard = ({item, index, moveItem}: ItemCardProps) => {
         inactive: isInactive,
     };
     const btnClassName = {
-        'btn-light': current?.id === item.id,
-        'btn-dark': current?.id !== item.id
+        'btn-outline-primary': current?.id === item.id,
+        'btn-dark': current?.id !== item.id && !isInactive,
+        'btn-danger': isInactive && !!item.status,
     };
 
     const onClick = () => {

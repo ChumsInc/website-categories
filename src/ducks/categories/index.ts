@@ -11,6 +11,7 @@ import {
     updateCategory
 } from "./actions";
 import {categorySorter} from "./utils";
+import {defaultCategory} from "../types";
 
 export interface CategoriesState {
     list: ProductCategory[];
@@ -81,9 +82,10 @@ const categoriesReducer = createReducer(initialState, (builder) => {
             state.loading = false;
         })
         .addCase(updateCategory, (state, action) => {
-            if (state.current) {
-                state.current = {...state.current, ...action.payload, changed: true};
+            if (!state.current) {
+                state.current = {...defaultCategory};
             }
+            state.current = {...state.current, ...action.payload, changed: true};
         })
         .addCase(toggleShowInactive, (state, action) => {
             state.showInactive = action.payload ?? !state.showInactive;

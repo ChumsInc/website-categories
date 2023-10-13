@@ -1,7 +1,7 @@
 import React, {ChangeEvent, FormEvent, Fragment, useState} from 'react';
 import {useSelector} from 'react-redux';
 import ModalEditor from "../../components/ModalEditor";
-import {Alert, FormColumn, Progress, ProgressBar} from "chums-components";
+import {Alert, FormColumn, Progress, ProgressBar, SpinnerButton} from "chums-components";
 import CategorySelect from "./CategorySelect";
 import AlertExistingKeyword from "../keywords/AlertExistingKeyword";
 import {selectCategoriesLoading, selectChildCategories, selectCurrentCategory} from "./selectors";
@@ -15,6 +15,7 @@ import {useAppDispatch} from "../../app/configureStore";
 import {ProductCategory} from "b2b-types";
 import {TextareaAutosize} from "@mui/base";
 import UsageByKeyword from "../usage/UsageByKeyword";
+import PreviewLink from "./PreviewLink";
 
 type EditorField = keyof Pick<ProductCategory, 'pageText' | 'descriptionMeta'>;
 
@@ -86,13 +87,15 @@ const CategoryEditor: React.FC<CategoryEditorProps> = ({}) => {
     return (
         <Fragment>
             <div className="sticky-50">
-                <h4>Edit{' '}
-                    {!!category?.keyword && (
-                        <small>
-                            (<a href={previewURL(category.keyword)} target="_blank">preview</a>)
-                        </small>
-                    )}
-                </h4>
+                <div className="row g-3">
+                    <div className="col">
+                        <h4>Edit</h4>
+                    </div>
+                    <div className="col-auto">
+                        <PreviewLink />
+                    </div>
+                </div>
+
                 <form onSubmit={onSubmit} className="my-3">
                     <FormColumn label="ID / Keyword" width={8}>
                         <div className="input-group input-group-sm">
@@ -156,24 +159,31 @@ const CategoryEditor: React.FC<CategoryEditorProps> = ({}) => {
                             </div>
                         </div>
                     </FormColumn>
-                    <FormColumn width={8} label={' '} className="mt-3">
-                        <button type="submit" className="btn btn-sm btn-primary me-1"
-                                title={'last saved: ' + category?.timestamp}>
-                            Save
-                        </button>
-                        <button type="button" className="btn btn-sm btn-outline-secondary me-1"
-                                onClick={onNewCategory}>
-                            New Category
-                        </button>
-                        <button type="button" className="btn btn-sm btn-outline-danger me-1"
-                                onClick={onDeleteCategory}
-                                disabled={!category || !category?.id || category?.children?.length > 0}>
-                            Delete
-                        </button>
+                    <FormColumn width={8} label={' '} className="mt-1">
+                        <div className="row g-3">
+                            <div className="col-auto">
+                                <SpinnerButton type="submit" size="sm" color="primary"
+                                               title={'last saved: ' + category?.timestamp}>
+                                    Save
+                                </SpinnerButton>
+                            </div>
+                            <div className="col-auto">
+                                <button type="button" className="btn btn-sm btn-outline-secondary me-1"
+                                        onClick={onNewCategory}>
+                                    New Category
+                                </button>
+                            </div>
+                            <div className="col-auto">
+                                <button type="button" className="btn btn-sm btn-outline-danger me-1"
+                                        onClick={onDeleteCategory}
+                                        disabled={!category || !category?.id || category?.children?.length > 0}>
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
                     </FormColumn>
-                    {category?.changed && <Alert message="Don't forget to save your changes"/>}
+                    {category?.changed && <Alert color="warning" message="Don't forget to save your changes"/>}
                 </form>
-                {loading && <Progress><ProgressBar striped/></Progress>}
             </div>
             <div className="my-3">
                 <UsageByKeyword keyword={category?.keyword} />

@@ -10,6 +10,7 @@ import {DndProvider} from "react-dnd";
 import {useAppDispatch} from "../../app/configureStore";
 import {selectCategoriesLoading, selectCurrentCategory} from "../categories/selectors";
 import {CategoryItem} from "../types";
+import PreviewLink from "../categories/PreviewLink";
 
 const CategoryItemList = () => {
     const dispatch = useAppDispatch();
@@ -54,7 +55,7 @@ const CategoryItemList = () => {
 
     return (
         <div>
-            <div className="row my-1 align-items-center">
+            <div className="row g-3 mb-1 align-items-baseline">
                 <div className="col-auto">
                     <button type="button" className="btn btn-sm btn-primary" onClick={onSave}
                             disabled={loading || saving}>
@@ -67,6 +68,9 @@ const CategoryItemList = () => {
                             <ProgressBar animated={true}/>
                         </Progress>
                     )}
+                </div>
+                <div className="col-auto">
+                    <PreviewLink />
                 </div>
             </div>
             <hr/>
