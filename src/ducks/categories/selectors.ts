@@ -1,5 +1,5 @@
 import {RootState} from "../../app/configureStore";
-import {createSelector} from "reselect";
+import {createSelector} from "@reduxjs/toolkit";
 import {calcChildIds, calcParentIds, categorySorter} from "./utils";
 
 export const selectShowInactive = (state: RootState): boolean => state.categories.showInactive;

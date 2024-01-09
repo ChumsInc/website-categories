@@ -2,7 +2,7 @@ import {Keyword} from 'b2b-types'
 import {RootState} from "../../app/configureStore";
 import {createAsyncThunk, createReducer} from "@reduxjs/toolkit";
 import {fetchKeywords} from "../../api/keywords";
-import {createSelector} from "reselect";
+import {createSelector} from "@reduxjs/toolkit";
 
 
 export interface KeywordsState {

@@ -1,14 +1,13 @@
 import React, {ChangeEvent, FormEvent, Fragment, useState} from 'react';
 import {useSelector} from 'react-redux';
 import ModalEditor from "../../components/ModalEditor";
-import {Alert, FormColumn, Progress, ProgressBar, SpinnerButton} from "chums-components";
+import {Alert, FormColumn, SpinnerButton} from "chums-components";
 import CategorySelect from "./CategorySelect";
 import AlertExistingKeyword from "../keywords/AlertExistingKeyword";
-import {selectCategoriesLoading, selectChildCategories, selectCurrentCategory} from "./selectors";
+import {selectChildCategories, selectCurrentCategory} from "./selectors";
 import {defaultCategory} from "../types";
 import SEOChangeFreqSelect from "./SEOChangeFreqSelect";
 import SEOPrioritySelect from "./SEOPrioritySelect";
-import {previewURL} from "./utils";
 import StatusButton from "../../components/StatusButton";
 import {saveCategory, updateCategory} from "./actions";
 import {useAppDispatch} from "../../app/configureStore";
@@ -27,7 +26,6 @@ const CategoryEditor: React.FC<CategoryEditorProps> = ({}) => {
     const dispatch = useAppDispatch();
     const category = useSelector(selectCurrentCategory);
     const disallowedChildIds = useSelector(selectChildCategories);
-    const loading = useSelector(selectCategoriesLoading);
     const [editorField, setEditorField] = useState<EditorField | null>(null);
 
     const onSubmit = (ev: FormEvent) => {
@@ -39,6 +37,9 @@ const CategoryEditor: React.FC<CategoryEditorProps> = ({}) => {
     }
 
     const valueChangeHandler = (field: keyof ProductCategory) => (value: any) => {
+        if (category?.[field] === value) {
+            return;
+        }
         dispatch(updateCategory({[field]: value}));
     }
 
@@ -92,7 +93,7 @@ const CategoryEditor: React.FC<CategoryEditorProps> = ({}) => {
                         <h4>Edit</h4>
                     </div>
                     <div className="col-auto">
-                        <PreviewLink />
+                        <PreviewLink/>
                     </div>
                 </div>
 
@@ -132,7 +133,8 @@ const CategoryEditor: React.FC<CategoryEditorProps> = ({}) => {
                     </FormColumn>
                     <FormColumn label="Text" width={8}>
                         <div className="input-group input-group-sm">
-                            <TextareaAutosize className="form-control form-control-sm mb-1" value={category?.pageText ?? ''}
+                            <TextareaAutosize className="form-control form-control-sm mb-1"
+                                              value={category?.pageText ?? ''}
                                               onChange={textareaChangeHandler('pageText')} maxRows={5}/>
                             <button type="button" className="btn btn-outline-secondary"
                                     onClick={() => setEditorField('pageText')}>
@@ -186,7 +188,7 @@ const CategoryEditor: React.FC<CategoryEditorProps> = ({}) => {
                 </form>
             </div>
             <div className="my-3">
-                <UsageByKeyword keyword={category?.keyword} />
+                <UsageByKeyword keyword={category?.keyword}/>
             </div>
             {!!category && !!editorField &&
                 <ModalEditor title={`Edit '${editorField}'`} content={String(category[editorField]) || ''}

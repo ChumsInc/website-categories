@@ -1,8 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {Modal} from "chums-components";
-import AceEditor from "react-ace";
-import "ace-builds/src-noconflict/mode-html";
-import "ace-builds/src-noconflict/theme-github";
+import Editor from '@monaco-editor/react';
 
 interface ModalEditorProps {
     title: string,
@@ -11,7 +9,7 @@ interface ModalEditorProps {
     onCancel: () => void,
 }
 
-const ModalEditor = ({title, content, onClose, onCancel}:ModalEditorProps) => {
+const ModalEditor = ({title, content, onClose, onCancel}: ModalEditorProps) => {
     const [html, setHTML] = useState(content || '');
     useEffect(() => {
         setHTML(content);
@@ -19,10 +17,12 @@ const ModalEditor = ({title, content, onClose, onCancel}:ModalEditorProps) => {
 
     return (
         <Modal onClose={onClose} size="lg" title={title}>
-            <AceEditor mode="html" value={html} tabSize={4} wrapEnabled width="100%"
-                       onChange={(value => setHTML(value))}/>
+            <Editor language="html" height="75vh"
+            options={{wordWrap: 'on'}}
+                    value={html} onChange={(value => setHTML(value ?? ''))}/>
             <div>
-                <button onClick={() => onClose(html)} className="btn btn-sm btn-primary me-1">Close / Apply Changes</button>
+                <button onClick={() => onClose(html)} className="btn btn-sm btn-primary me-1">Close / Apply Changes
+                </button>
                 <button onClick={() => onCancel()} className="btn btn-sm btn-secondary">Cancel</button>
             </div>
         </Modal>
