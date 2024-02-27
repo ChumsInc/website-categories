@@ -16,7 +16,10 @@
 
   &.inactive {
     color: black;
-    background-color: lighten(black, 50%);
+    button {
+      background-color: var(--bs-danger);
+      color: white;
+    }
     //border-color: red;
     img {
       filter: grayscale(50%) brightness(80%);
@@ -24,12 +27,13 @@
     a {
       color: lighten(black, 50%);
     }
+
   }
 
   &--edit-button {
     width: 5rem;
-    border-bottom-right-radius: 0;
-    border-bottom-left-radius: 0;
+    border-radius: 0;
+    margin-bottom: 0 !important;
   }
 
   &.section {
