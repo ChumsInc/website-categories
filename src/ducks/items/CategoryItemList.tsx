@@ -43,10 +43,10 @@ const CategoryItemList = () => {
         if (!current) {
             return;
         }
-        const saveItems = items.map(item => {
+        const saveItems = items.map((item, index) => {
             return {
                 id: item.id,
-                priority: item.priority,
+                priority: index,
             }
         })
         dispatch(saveItemSort({parentId: current.id, items: saveItems}));
