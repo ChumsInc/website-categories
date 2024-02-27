@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {useSelector} from 'react-redux';
 import {itemSortPriority} from '../../utils';
 import {selectItemList, selectItemsLoading, selectSortSaving} from "./selectors";
@@ -11,6 +11,7 @@ import {useAppDispatch} from "../../app/configureStore";
 import {selectCategoriesLoading, selectCurrentCategory} from "../categories/selectors";
 import {CategoryItem} from "../types";
 import PreviewLink from "../categories/PreviewLink";
+import update from 'immutability-helper';
 
 const CategoryItemList = () => {
     const dispatch = useAppDispatch();
@@ -25,24 +26,18 @@ const CategoryItemList = () => {
 
     useEffect(() => {
         setItems([...list].sort(itemSortPriority));
-    }, [list]);
+    }, [list, current]);
 
-    const onMoveItem = (dragIndex: number, hoverIndex: number) => {
-        const sorted = [...items];
-        if (!sorted[dragIndex]) {
-            return;
-        }
-        const movingItem = sorted[dragIndex];
-        sorted.splice(dragIndex, 1);
-        sorted.splice(hoverIndex, 0, movingItem);
-        const newSort = sorted.map((item, index) => {
-            return {
-                ...item,
-                priority: index,
-            }
-        })
-        setItems(newSort);
-    }
+    const moveItemHandler = useCallback((dragIndex: number, hoverIndex: number) => {
+        setItems((prevItems: CategoryItem[]) => (
+            update(prevItems, {
+                $splice: [
+                    [dragIndex, 1],
+                    [hoverIndex, 0, prevItems[dragIndex] as CategoryItem]
+                ]
+            })
+        ))
+    }, [current, list])
 
     const onSave = () => {
         if (!current) {
@@ -56,6 +51,12 @@ const CategoryItemList = () => {
         })
         dispatch(saveItemSort({parentId: current.id, items: saveItems}));
     }
+
+    const renderedCategoryItem = useCallback((item:CategoryItem, index: number) => {
+        return (
+            <SortableCategoryItem key={item.id} index={index} item={item} moveItem={moveItemHandler}/>
+        )
+    }, [current, list])
 
     return (
         <div>
@@ -80,10 +81,7 @@ const CategoryItemList = () => {
             <hr/>
             <DndProvider backend={HTML5Backend}>
                 <div className="sortable-item-list">
-                    {items.map((item, index) => (
-                            <SortableCategoryItem key={item.id} index={index} item={item} moveItem={onMoveItem}/>
-                        )
-                    )}
+                    {items.map((item, index) => renderedCategoryItem(item, index))}
                 </div>
             </DndProvider>
         </div>

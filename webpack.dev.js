@@ -27,12 +27,12 @@ module.exports = merge(common, {
             }
         ],
         hot: true,
-        proxy: {
-            '/api': {...localProxy},
-            '/node-dev/': {...localProxy},
-            '/node-sage/': {...localProxy},
-            '/sage/': {...localProxy},
-        },
+        proxy: [
+            {
+                ...localProxy,
+                context: ['/api', '/node-sage', '/sage']
+            }
+        ],
         watchFiles: 'src/**/*',
     },
     devtool: 'eval-source-map',

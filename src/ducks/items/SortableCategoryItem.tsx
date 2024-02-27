@@ -1,6 +1,6 @@
 import React, {useRef} from 'react';
 import {DropTargetMonitor, useDrag, useDrop} from 'react-dnd';
-import {XYCoord} from "dnd-core";
+import {Identifier, XYCoord} from "dnd-core";
 import classNames from "classnames";
 import {itemTypes,} from "./index";
 import ProductImage from "./ProductImage";
@@ -35,14 +35,14 @@ const SortableCategoryItem = ({item, index, moveItem}: ItemCardProps) => {
     const ref = useRef<HTMLDivElement>(null);
     const current = useSelector(selectCurrentItem);
 
-    const [, drop] = useDrop({
+    const [, drop] = useDrop<DragItem, void, {handlerId: Identifier|null}>({
         accept: 'item',
         collect(monitor) {
             return {
                 handlerId: monitor.getHandlerId(),
             }
         },
-        hover(item: unknown, monitor: DropTargetMonitor) {
+        hover(item: DragItem, monitor: DropTargetMonitor) {
             if (!ref.current) {
                 return;
             }
@@ -50,24 +50,26 @@ const SortableCategoryItem = ({item, index, moveItem}: ItemCardProps) => {
             if (!clientOffset) {
                 return;
             }
-            const dragIndex = (item as DragItem).index;
+            const dragIndex = item.index;
             const hoverIndex = index;
             if (dragIndex === hoverIndex) {
                 return;
             }
             const hoverBoundingRect = ref.current?.getBoundingClientRect();
             const hoverMiddleY = Math.ceil((hoverBoundingRect.bottom - hoverBoundingRect.top) / 2);
-            // const hoverMiddleX = Math.ceil((hoverBoundingRect.left - hoverBoundingRect.right) / 2);
 
             const hoverClientY = clientOffset.y - hoverBoundingRect.top;
-            // const hoverClientX = clientOffset.x - hoverBoundingRect.left;
 
             if (dragIndex < hoverIndex && (hoverClientY < hoverMiddleY)) {
                 return;
             }
 
+            if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+                return;
+            }
+
             moveItem(dragIndex, hoverIndex);
-            (item as DragItem).index = hoverIndex;
+            item.index = hoverIndex;
         },
     });
 

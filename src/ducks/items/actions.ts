@@ -1,4 +1,4 @@
-import {selectItemSaving, selectItemsLoading, selectSortSaving} from "./selectors";
+import {selectItemList, selectItemSaving, selectItemsLoading, selectSortSaving} from "./selectors";
 import {deleteItem, fetchItem, postItem, postItemSort, PostItemSortArg} from "../../api/items";
 import {createAction, createAsyncThunk} from "@reduxjs/toolkit";
 import {RootState} from "../../app/configureStore";
@@ -43,8 +43,14 @@ export const updateCurrentItem = createAction<UpdateItemProps>('items/current/up
 
 export const saveCurrentItem = createAsyncThunk<ProductCategoryChild | null, CategoryItem>(
     'items/current/save',
-    async (arg) => {
-        return await postItem(arg);
+    async (arg, {getState}) => {
+        let priority = arg.priority;
+        if (!arg.id) {
+            const state = getState() as RootState;
+            const items = selectItemList(state);
+            priority = items.length;
+        }
+        return await postItem({...arg, priority});
     },
     {
         condition: (arg, {getState}) => {

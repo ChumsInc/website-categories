@@ -18,6 +18,8 @@ import {Keyword, ProductCategoryChild} from "b2b-types";
 import UsageByKeyword from "../usage/UsageByKeyword";
 import classNames from "classnames";
 import ProductImage from "./ProductImage";
+import LayoutWidthInput from "./LayoutWidthInput";
+import {LayoutAttributes, LayoutWidth} from "b2b-types/src/generic";
 
 type EditorField = keyof Pick<ProductCategoryChild, 'sectionDescription' | 'description'>;
 
@@ -57,6 +59,22 @@ const ItemEditor = () => {
                 dispatch(updateCurrentItem({[field]: ev.target.value}));
                 return;
         }
+    }
+
+    const layoutWidthsChangeHandler = (width:LayoutWidth) => (ev:ChangeEvent<HTMLInputElement>) => {
+        if (!item) {
+            return;
+        }
+        const attr:LayoutAttributes = {...item.layoutAttributes}
+        if (!attr.widths) {
+            attr.widths = {};
+        }
+        if (ev.target.value) {
+            attr.widths![width] = ev.target.value;
+        } else {
+            attr.widths[width] = '';
+        }
+        dispatch(updateCurrentItem({...item, layoutAttributes: attr}));
     }
 
 
@@ -114,7 +132,7 @@ const ItemEditor = () => {
 
     if (!item) {
         return (
-            <div className="row g-3">
+            <div className="row g-3 align-items-baseline">
                 <div className="col">
                     <Alert color="info">Select an Item</Alert>
                 </div>
@@ -228,6 +246,33 @@ const ItemEditor = () => {
                         <input type="text" value={item.urlOverride ?? ''} onChange={changeHandler('urlOverride')}
                                className="form-control form-control-sm" required={isCategoryChildLink(item)}/>
                         <small>If outside of domain, make sure to include 'https://'</small>
+                    </FormColumn>
+                    <FormColumn label="Layout Widths">
+                        <div className="row g-1 mb-2">
+                            <div className="col-4">
+                                <LayoutWidthInput size="xs" value={item.layoutAttributes?.widths?.xs ?? ''}
+                                                  onChange={layoutWidthsChangeHandler('xs')} />
+                            </div>
+                            <div className="col-4">
+                                <LayoutWidthInput size="sm" value={item.layoutAttributes?.widths?.sm ?? ''}
+                                                  onChange={layoutWidthsChangeHandler('sm')} />
+
+                            </div>
+                            <div className="col-4">
+                                <LayoutWidthInput size="md" value={item.layoutAttributes?.widths?.md ?? ''}
+                                                  onChange={layoutWidthsChangeHandler('md')} />
+
+                            </div>
+                            <div className="col-4">
+                                <LayoutWidthInput size="lg" value={item.layoutAttributes?.widths?.lg ?? ''}
+                                                  onChange={layoutWidthsChangeHandler('lg')} />
+
+                            </div>
+                            <div className="col-4">
+                                <LayoutWidthInput size="xl" value={item.layoutAttributes?.widths?.xl ?? ''}
+                                                  onChange={layoutWidthsChangeHandler('xl')} />
+                            </div>
+                        </div>
                     </FormColumn>
                     <FormColumn width={8} label={' '}>
                         <div className="row g-3">
