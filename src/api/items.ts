@@ -1,6 +1,7 @@
 import {ProductCategoryChild} from "b2b-types";
 import {fetchJSON} from "chums-components";
 import {CategoryItem} from "../ducks/types";
+import {isCategoryChildCategory, isCategoryChildProduct} from "../ducks/items/utils";
 
 export interface ItemArg {
     parentId: number;
@@ -24,8 +25,18 @@ export async function deleteItem(arg: Required<ItemArg>): Promise<ProductCategor
 
 export async function postItem(arg: CategoryItem): Promise<ProductCategoryChild | null> {
     try {
+        let body:string;
+        if (isCategoryChildCategory(arg)) {
+            const {category, ...rest} = arg;
+            body = JSON.stringify(rest);
+        } else if (isCategoryChildProduct(arg)) {
+            const {product, ...rest} = arg;
+            body = JSON.stringify(rest);
+        } else {
+            body = JSON.stringify(arg);
+        }
         const url = '/api/b2b/products/category/item';
-        const res = await fetchJSON<{ item: ProductCategoryChild }>(url, {method: 'POST', body: JSON.stringify(arg)});
+        const res = await fetchJSON<{ item: ProductCategoryChild }>(url, {method: 'POST', body});
         return res.item ?? null;
     } catch (err: unknown) {
         if (err instanceof Error) {
@@ -45,7 +56,11 @@ export interface PostItemSortArg {
 export async function postItemSort(arg: PostItemSortArg): Promise<ProductCategoryChild[]> {
     try {
         const url = `/api/b2b/products/category/${encodeURIComponent(arg.parentId)}/sort`;
-        const body = JSON.stringify({items: arg.items});
+        const items = arg.items.map(item => {
+            const {id,priority } = item;
+            return {id, priority};
+        })
+        const body = JSON.stringify({items: items});
         const res = await fetchJSON<{ categoryItems: ProductCategoryChild[] }>(url, {method: 'POST', body});
         return res.categoryItems ?? [];
     } catch (err: unknown) {
