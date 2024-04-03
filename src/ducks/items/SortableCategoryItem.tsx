@@ -99,8 +99,8 @@ const SortableCategoryItem = ({item, index, moveItem}: ItemCardProps) => {
         inactive: isInactive,
     };
     const btnClassName = {
-        'btn-outline-primary': current?.id === item.id,
-        'btn-dark': current?.id !== item.id && !isInactive,
+        'btn-primary': current?.id === item.id,
+        'btn-secondary': current?.id !== item.id && !isInactive,
         'btn-danger': isInactive && !!item.status,
     };
 
@@ -129,6 +129,8 @@ const SortableCategoryItem = ({item, index, moveItem}: ItemCardProps) => {
                             </a>
                         </div>
                     )}
+                    {!!isCategoryChildProduct(item) && <div>{item.product?.keyword}</div>}
+                    {!!isCategoryChildCategory(item) && <div>{item.category?.keyword}</div>}
                 </div>
             </div>
         </div>
